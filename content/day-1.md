@@ -1,11 +1,4 @@
-### **Day 1: The Spark - An Introduction to JavaScript**
-
-````markdown
-# Course 2: JavaScript Fundamentals
-
-## Day 1: The Spark
-
-<p>Ahsan Ayaz</p>
+### **Day 1: An Introduction to JavaScript**
 
 ---
 
@@ -19,7 +12,7 @@ Seriously, give yourselves a round of applause! 👏👏👏
 
 ### But let's be real for a second...
 
-![CSS is awesome meme](https://i.imgflip.com/34WH0R.jpg)
+<img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExa3VzYmt6aTl4cG55dXE3ZW91ZmRmOTRta29ubTB1OWI5a2ozZ3FyeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/13FrpeVH09Zrb2/giphy.gif" style="height: 400px" >
 
 Making things look good is hard, and you did it!
 
@@ -28,11 +21,20 @@ Making things look good is hard, and you did it!
 ### What was missing?
 
 You built the **skeleton** (HTML).
+
+<!-- .element class="fragment" -->
+
 You chose the **clothes** (CSS).
+
+<!-- .element class="fragment" -->
 
 But how do we make our creation... _think_? _act_? _do things_?
 
+<!-- .element class="fragment" -->
+
 We need to give it a **brain**.
+
+<!-- .element class="fragment" -->
 
 ---
 
@@ -50,9 +52,11 @@ It's the language of the web that adds **interactivity** and **logic**.
 
 --
 
-### The Holy Trinity of Frontend
+#### The hard problem of consciousness
 
-![Expanding Brain Meme for Web Dev](https://i.imgflip.com/79619h.jpg)
+![Expanding Brain Meme for Web Dev](assets/images/expanding_brain.jpg)
+
+<!-- .element style="height: 500px;" -->
 
 This is the moment we level up.
 
@@ -61,12 +65,19 @@ This is the moment we level up.
 ### What can you do with JS?
 
 - Respond to user actions (clicks, scrolls, key presses)
+<!-- .element class="fragment" -->
 - Change HTML and CSS on the fly
+<!-- .element class="fragment" -->
 - Fetch data from servers (Weather, Movies, etc.)
+<!-- .element class="fragment" -->
 - Create animations and games
+<!-- .element class="fragment" -->
 - ...and so much more!
+<!-- .element class="fragment" -->
 
 Basically, almost everything you _interact with_ on a website is powered by JavaScript.
+
+<!-- .element class="fragment" -->
 
 --
 
@@ -74,9 +85,15 @@ Basically, almost everything you _interact with_ on a website is powered by Java
 
 We are not going to build a full-blown app in 3 days.
 
+<!-- .element class="fragment" -->
+
 Our goal is to **learn the alphabet of programming**.
 
+<!-- .element class="fragment" -->
+
 We'll learn the core building blocks so you can write any "story" you want later.
+
+<!-- .element class="fragment" -->
 
 ---
 
@@ -91,8 +108,11 @@ The console is your best friend. It's a direct line to the browser's JavaScript 
 It's a place to:
 
 1.  Experiment with code safely.
+<!-- .element class="fragment" -->
 2.  See output from your program.
+<!-- .element class="fragment" -->
 3.  Debug when things go wrong.
+<!-- .element class="fragment" -->
 
 --
 
@@ -103,6 +123,8 @@ It's a place to:
 
 It looks a little scary, but trust me, it's not.
 
+<!-- .element class="fragment" -->
+
 --
 
 ### "Hello, World!"
@@ -112,9 +134,10 @@ This is a rite of passage for every programmer. Type this into the console and p
 ```js
 console.log('Hello, World!');
 ```
-````
 
 `console.log()` is how we "print" things out. It's how we ask our program, "Hey, what's the value of this thing right now?"
+
+<!-- .element class="fragment" style="font-size: 24px;" -->
 
 --
 
@@ -133,7 +156,11 @@ Try typing these directly into the console:
 // expected output: 21
 ```
 
+<!-- .element class="fragment" -->
+
 The browser will solve it for you instantly!
+
+<!-- .element class="fragment"  -->
 
 ---
 
@@ -145,11 +172,15 @@ The browser will solve it for you instantly!
 
 Imagine you have a box. You can put something in the box and write a label on it.
 
+<!-- .element class="fragment" style="font-size: 24px;" -->
+
 **A variable is a labeled box for storing data.**
 
-![Box Analogy](https://i.imgur.com/8xQ3o1a.png)
+<!-- .element class="fragment" style="font-size: 24px;" -->
 
-Instead of using the data directly, we can just refer to the label on the box.
+![Variables](assets/images/variables.png)
+
+<!-- .element class="fragment" style="height: 500px;"  -->
 
 --
 
@@ -158,7 +189,12 @@ Instead of using the data directly, we can just refer to the label on the box.
 We have two main types of "boxes".
 
 1.  **`let`**: A standard box. You can change what's inside it later.
+<!-- .element class="fragment"  -->
+
 2.  **`const`**: A "constant" box. Once you put something in it, you can't change it. It's like you taped it shut.
+<!-- .element class="fragment"  -->
+
+--
 
 ```js
 // Use 'let' for values you expect to change
@@ -172,14 +208,7 @@ const name = 'Ahsan';
 
 **Rule of thumb: Always use `const` unless you know you will need to change the variable's value.**
 
---
-
-### The Distracted Boyfriend Guide to `let` vs `const`
-
-![Distracted Boyfriend Meme for let vs const](https://i.imgur.com/2O5Yf7N.png)
-
-`let` can be reassigned to a new value.
-`const` is loyal and will throw an error if you try.
+<!-- .element class="fragment"  -->
 
 ---
 
@@ -192,8 +221,13 @@ const name = 'Ahsan';
 JavaScript needs to know what _kind_ of data it's working with. There are three main basic types we'll start with.
 
 - **String**: Text. Anything in quotes.
+<!-- .element class="fragment"  -->
+
 - **Number**: ...Numbers. With or without decimals.
+<!-- .element class="fragment"  -->
+
 - **Boolean**: `true` or `false`. A light switch.
+<!-- .element class="fragment"  -->
 
 --
 
@@ -234,6 +268,8 @@ let hasFinished = false;
 
 How can we check the data type of a variable? Use the `typeof` operator!
 
+<!-- .element class="fragment"  -->
+
 ```js
 const name = 'Andress';
 typeof name;
@@ -248,7 +284,11 @@ typeof isInstructor;
 // expected output: "boolean"
 ```
 
+<!-- .element class="fragment"  -->
+
 This is a super useful tool for debugging!
+
+<!-- .element class="fragment"  -->
 
 ---
 
@@ -259,6 +299,8 @@ This is a super useful tool for debugging!
 ### Operators
 
 We can use operators to perform actions with our variables.
+
+<!-- .element class="fragment"  -->
 
 ```js
 let a = 10;
@@ -272,11 +314,15 @@ console.log(a / b); // 2
 console.log(a % b); // 0 (remainder after division)
 ```
 
+<!-- .element class="fragment"  -->
+
 --
 
 ### The Weird Part: String Concatenation
 
 What happens when you use `+` with strings? It joins them together!
+
+<!-- .element class="fragment"  -->
 
 ```js
 const firstName = 'Zico';
@@ -288,13 +334,21 @@ console.log(fullName);
 // expected output: "Zico Silva"
 ```
 
+<!-- .element class="fragment"  -->
+
 --
 
 ### JavaScript Math Can Be Funny
 
 Watch out for this! It gets every new developer.
 
-![JS Math Meme](https://i.redd.it/s7e63b3671f31.jpg)
+<!-- .element class="fragment"  -->
+
+![JS Math Meme](assets/images/math_meme.webp)
+
+<!-- .element class="fragment"  -->
+
+--
 
 If you add a Number and a String, JavaScript will convert the Number to a String and join them.
 
@@ -312,32 +366,44 @@ console.log(number1 + string1);
 
 How do we compare values? JavaScript gives us several comparison operators:
 
+<!-- .element class="fragment"  -->
+
 ```js
 // Equality
 10 === 10; // true (strictly equals)
-10 !== 5;  // true (not equals)
+10 !== 5; // true (not equals)
 ```
+
+<!-- .element class="fragment"  -->
 
 --
 
 ### Size Comparisons
 
 ```js
-10 > 5;   // true (greater than)
-5 < 10;   // true (less than)
+10 > 5; // true (greater than)
+5 < 10; // true (less than)
 10 >= 10; // true (greater than or equal)
-5 <= 10;  // true (less than or equal)
+5 <= 10; // true (less than or equal)
 ```
 
+<!-- .element class="fragment"  -->
+
 These will be super useful for checking conditions!
+
+<!-- .element class="fragment"  -->
 
 --
 
 ### The `===` Operator
 
 **The `===` operator checks two things:**
+
 1.  Is the **value** the same?
+<!-- .element class="fragment"  -->
+
 2.  Is the **data type** the same?
+<!-- .element class="fragment"  -->
 
 ```js
 10 === 10; // true
@@ -345,7 +411,11 @@ These will be super useful for checking conditions!
 10 === '10'; // false! (Value is the same, but type is different)
 ```
 
+<!-- .element class="fragment"  -->
+
 **Always use `===` for checking equality.** It's safer.
+
+<!-- .element class="fragment"  -->
 
 ---
 
@@ -357,10 +427,19 @@ These will be super useful for checking conditions!
 
 **The Building Blocks of Programming:**
 
+<!-- .element class="fragment"  -->
+
 - **JavaScript** is the brain of web pages
+<!-- .element class="fragment"  -->
+
 - **Variables** (`let` and `const`) store our data
+<!-- .element class="fragment"  -->
+
 - **Data Types** tell us what kind of information we have
+<!-- .element class="fragment"  -->
+
 - **Operators** let us work with and compare data
+<!-- .element class="fragment"  -->
 
 --
 
@@ -387,6 +466,7 @@ This is the foundation of all programming logic!
 Today's lab will put everything together in a **Space Firefighter Command** scenario.
 
 You'll command a spaceship using:
+
 - Variables to store mission data
 - Math operators for calculations
 - Comparison operators for safety checks
@@ -403,6 +483,10 @@ Open the Space Firefighter lab and let's start coding!
 --
 
 ## Questions?
+
+```
+
+```
 
 ```
 
