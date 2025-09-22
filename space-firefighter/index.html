@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Console Commander: Space Freighter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Fira Code', monospace;
+        background-color: #0a0f1d;
+        color: #c0c5d5;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Scanlines effect for that retro CRT monitor feel */
+      body::after {
+        content: ' ';
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: linear-gradient(
+            rgba(18, 16, 16, 0) 50%,
+            rgba(0, 0, 0, 0.25) 50%
+          ),
+          linear-gradient(
+            90deg,
+            rgba(255, 0, 0, 0.06),
+            rgba(0, 255, 0, 0.02),
+            rgba(0, 0, 255, 0.06)
+          );
+        z-index: 2;
+        background-size: 100% 2px, 3px 100%;
+        pointer-events: none;
+        animation: flicker 0.15s infinite;
+      }
+
+      @keyframes flicker {
+        0% {
+          opacity: 0.2;
+        }
+        20% {
+          opacity: 0.6;
+        }
+        40% {
+          opacity: 0.3;
+        }
+        60% {
+          opacity: 0.7;
+        }
+        80% {
+          opacity: 0.4;
+        }
+        100% {
+          opacity: 0.8;
+        }
+      }
+
+      .text-glow {
+        text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+      }
+
+      .border-glow {
+        box-shadow: 0 0 5px 0px rgba(0, 255, 255, 0.3),
+          inset 0 0 5px 0px rgba(0, 255, 255, 0.3);
+      }
+
+      #console-log::-webkit-scrollbar {
+        width: 8px;
+      }
+      #console-log::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+      #console-log::-webkit-scrollbar-thumb {
+        background-color: #0891b2;
+        border-radius: 4px;
+      }
+
+      code {
+        background-color: #1e293b;
+        color: #facc15; /* Tailwind's yellow-400 */
+        padding: 0.2em 0.4em;
+        margin: 0 0.1em;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+
+      #victory-overlay.is-active #mars,
+      #victory-overlay.is-active #victory-text {
+        opacity: 1;
+        transition: opacity 1.5s 2s ease-in;
+      }
+
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          box-shadow: 0 0 15px #0891b2, 0 0 20px #0891b2;
+          transform: scale(1);
+        }
+        50% {
+          box-shadow: 0 0 25px #0891b2, 0 0 35px #0891b2;
+          transform: scale(1.02);
+        }
+      }
+      .launch-button {
+        animation: pulse-glow 2.5s infinite;
+      }
+    </style>
+  </head>
+  <body class="p-4 lg:p-8 flex items-center justify-center min-h-screen">
+    <main
+      id="game-ui"
+      class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6 border border-cyan-700/50 bg-slate-900/50 p-6 rounded-lg border-glow backdrop-blur-sm transition-opacity duration-500"
+    >
+      <div
+        class="lg:col-span-2 bg-slate-800/50 p-6 rounded-md border border-slate-700"
+      >
+        <h2
+          class="text-2xl font-bold text-cyan-400 text-glow mb-4 flex items-center"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="mr-3"
+          >
+            <path
+              d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+            />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+          Mission Briefing
+        </h2>
+        <div id="mission-text" class="text-slate-300 space-y-4"></div>
+      </div>
+
+      <div
+        class="lg:col-span-3 bg-slate-800/50 p-6 rounded-md border border-slate-700"
+      >
+        <h2
+          class="text-2xl font-bold text-cyan-400 text-glow mb-4 flex items-center"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="mr-3"
+          >
+            <path d="m12 2-7 20 7-4 7 4-7-20Z" />
+            <path d="M12 18v-6" />
+          </svg>
+          Ship Status
+        </h2>
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-lg text-slate-400 mb-2">// Cargo Bay</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div
+                id="cargo-a"
+                class="bg-slate-900 p-4 rounded-md border-2 border-slate-700 transition-all duration-300"
+              >
+                <p class="font-bold">Cargo Hold A</p>
+                <p class="text-sm text-slate-400">
+                  STATUS:
+                  <span class="font-semibold text-yellow-500"
+                    >AWAITING_DATA</span
+                  >
+                </p>
+                <p class="text-sm text-slate-400">
+                  WEIGHT:
+                  <span
+                    id="cargo-a-weight"
+                    class="font-semibold text-yellow-500"
+                    >...</span
+                  >
+                  kg
+                </p>
+              </div>
+              <div
+                id="cargo-b"
+                class="bg-slate-900 p-4 rounded-md border-2 border-slate-700 transition-all duration-300"
+              >
+                <p class="font-bold">Cargo Hold B</p>
+                <p class="text-sm text-slate-400">
+                  STATUS:
+                  <span class="font-semibold text-yellow-500"
+                    >AWAITING_DATA</span
+                  >
+                </p>
+                <p class="text-sm text-slate-400">
+                  WEIGHT:
+                  <span
+                    id="cargo-b-weight"
+                    class="font-semibold text-yellow-500"
+                    >...</span
+                  >
+                  kg
+                </p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-lg text-slate-400 mb-2">// Systems</h3>
+            <div
+              class="bg-slate-900 p-4 rounded-md border-2 border-slate-700 transition-all duration-300"
+              id="systems-panel"
+            >
+              <p class="font-bold">Engine Status</p>
+              <p class="text-sm text-slate-400">
+                STATUS:
+                <span id="engine-status" class="font-semibold text-yellow-500"
+                  >STANDBY</span
+                >
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="lg:col-span-5 bg-black/70 p-4 rounded-md border border-slate-700 h-48 flex flex-col"
+      >
+        <h3
+          class="text-lg text-green-400 text-glow flex items-center mb-2 shrink-0"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-5 h-5 mr-2"
+          >
+            <polyline points="4 17 10 11 4 5"></polyline>
+            <line x1="12" y1="19" x2="20" y2="19"></line>
+          </svg>
+          Ship's Computer Log
+        </h3>
+        <div
+          id="console-log"
+          class="flex-grow overflow-y-auto pr-2 text-green-400 text-sm"
+        ></div>
+      </div>
+    </main>
+
+    <!-- Launch Button Container -->
+    <div
+      id="launch-container"
+      class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-40"
+    >
+      <button
+        id="launch-button"
+        class="launch-button text-2xl font-bold text-white bg-cyan-600/80 border-2 border-cyan-400 rounded-lg px-8 py-4 backdrop-blur-sm transition-transform duration-200 hover:scale-105"
+      >
+        We're ready to fly, let's go!
+      </button>
+    </div>
+
+    <!-- Victory Animation Overlay -->
+    <div
+      id="victory-overlay"
+      class="hidden fixed inset-0 bg-black/80 z-50 backdrop-blur-sm"
+    >
+      <div id="mars" class="absolute top-[20%] right-[20%] opacity-0">
+        <svg width="150" height="150" viewBox="0 0 100 100">
+          <defs>
+            <radialGradient id="marsGradient" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#e29b63" />
+              <stop offset="100%" stop-color="#c94a0a" />
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="45" fill="url(#marsGradient)" />
+          <circle cx="30" cy="30" r="8" fill="#a03c08" opacity="0.6" />
+          <circle cx="65" cy="70" r="12" fill="#a03c08" opacity="0.6" />
+          <circle cx="70" cy="40" r="5" fill="#a03c08" opacity="0.6" />
+        </svg>
+      </div>
+      <div id="rocket" class="absolute opacity-0">
+        <svg width="75" height="150" viewBox="0 0 50 100">
+          <g>
+            <path
+              d="M 25 0 C 20 10, 20 10, 10 30 L 10 70 L 15 80 Q 25 85, 35 80 L 40 70 L 40 30 C 30 10, 30 10, 25 0 Z"
+              fill="#d1d5db"
+            />
+            <path
+              d="M 25 0 C 30 10, 30 10, 40 30 L 10 30 C 20 10, 20 10, 25 0 Z"
+              fill="#ef4444"
+            />
+            <path d="M 10 70 L 0 90 L 10 80 Z" fill="#9ca3af" />
+            <path d="M 40 70 L 50 90 L 40 80 Z" fill="#9ca3af" />
+            <circle
+              cx="25"
+              cy="50"
+              r="8"
+              fill="#3b82f6"
+              stroke="#93c5fd"
+              stroke-width="2"
+            />
+          </g>
+        </svg>
+      </div>
+      <p
+        id="victory-text"
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl text-cyan-300 text-glow opacity-0"
+      >
+        Destination Reached: Mars
+      </p>
+      <div
+        class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col sm:flex-row gap-4"
+      >
+        <button
+          id="replay-button"
+          class="text-xl font-bold text-white bg-slate-700/80 border-2 border-slate-500 rounded-lg px-6 py-3 backdrop-blur-sm transition-transform duration-200 hover:scale-105"
+        >
+          Replay Mission
+        </button>
+        <button
+          id="generate-card-button"
+          class="text-xl font-bold text-white bg-cyan-600/80 border-2 border-cyan-400 rounded-lg px-6 py-3 backdrop-blur-sm transition-transform duration-200 hover:scale-105"
+        >
+          Generate Mission Card
+        </button>
+      </div>
+    </div>
+
+    <!-- Mission Card Generation Modal -->
+    <div
+      id="card-modal"
+      class="hidden fixed z-50 inset-0 bg-black/90 z-60 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-slate-800 rounded-lg border-2 border-cyan-400 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-2xl font-bold text-cyan-400 text-glow">
+            Generate Mission Card
+          </h3>
+          <button
+            id="close-modal"
+            class="text-slate-400 hover:text-white text-2xl font-bold"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="space-y-6">
+          <div>
+            <label class="block text-slate-300 mb-2 font-semibold">
+              Upload Your Photo
+            </label>
+            <input
+              type="file"
+              id="image-upload"
+              accept="image/*"
+              class="w-full p-3 bg-slate-900 border border-slate-600 rounded text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-cyan-600 file:text-white hover:file:bg-cyan-700 transition-colors"
+            />
+            <p class="text-xs text-slate-400 mt-1">
+              JPG, PNG or WebP. Best results with clear face photos.
+            </p>
+          </div>
+
+          <div id="api-key-section">
+            <label class="block text-slate-300 mb-2 font-semibold">
+              Gemini API Key
+            </label>
+            <input
+              type="password"
+              id="api-key-input"
+              placeholder="Enter your Gemini API key"
+              class="w-full p-3 bg-slate-900 border border-slate-600 rounded text-slate-300 placeholder-slate-500"
+            />
+            <p class="text-xs text-slate-400 mt-1">
+              Get your free API key at
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                class="text-cyan-400 underline"
+                >Google AI Studio</a
+              >
+            </p>
+          </div>
+
+          <div id="api-key-saved" class="hidden">
+            <div
+              class="flex items-center justify-between p-3 bg-green-900/30 border border-green-600 rounded"
+            >
+              <div class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-green-400 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <span class="text-green-400 font-semibold">API Key Saved</span>
+              </div>
+              <button
+                id="clear-api-key"
+                class="text-slate-400 hover:text-white text-sm underline"
+              >
+                Use Different Key
+              </button>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <button
+              id="generate-card-btn"
+              class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-6 rounded transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed"
+              disabled
+            >
+              <span id="generate-btn-text">Generate Mission Card</span>
+              <span id="generate-btn-loading" class="hidden"
+                >Generating...</span
+              >
+            </button>
+          </div>
+
+          <div id="generated-card-container" class="hidden text-center">
+            <h4 class="text-lg font-semibold text-slate-300 mb-3">
+              Your Mission Card:
+            </h4>
+            <img
+              id="generated-card-image"
+              class="max-w-full h-auto rounded border-2 border-cyan-400 mx-auto mb-4"
+            />
+            <button
+              id="download-card-btn"
+              class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+            >
+              Download Card
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- DOM Elements ---
+      const gameUiEl = document.getElementById('game-ui');
+      const missionTextEl = document.getElementById('mission-text');
+      const consoleLogEl = document.getElementById('console-log');
+      const cargoAEl = document.getElementById('cargo-a');
+      const cargoBEl = document.getElementById('cargo-b');
+      const cargoAWeightEl = document.getElementById('cargo-a-weight');
+      const cargoBWeightEl = document.getElementById('cargo-b-weight');
+      const engineStatusEl = document.getElementById('engine-status');
+      const systemsPanelEl = document.getElementById('systems-panel');
+      const victoryOverlayEl = document.getElementById('victory-overlay');
+      const launchContainerEl = document.getElementById('launch-container');
+      const launchButtonEl = document.getElementById('launch-button');
+      const replayButtonEl = document.getElementById('replay-button');
+      const generateCardButtonEl = document.getElementById(
+        'generate-card-button'
+      );
+      const cardModalEl = document.getElementById('card-modal');
+      const closeModalEl = document.getElementById('close-modal');
+      const imageUploadEl = document.getElementById('image-upload');
+      const apiKeyInputEl = document.getElementById('api-key-input');
+      const apiKeySectionEl = document.getElementById('api-key-section');
+      const apiKeySavedEl = document.getElementById('api-key-saved');
+      const clearApiKeyEl = document.getElementById('clear-api-key');
+      const generateCardBtnEl = document.getElementById('generate-card-btn');
+      const generateBtnTextEl = document.getElementById('generate-btn-text');
+      const generateBtnLoadingEl = document.getElementById(
+        'generate-btn-loading'
+      );
+      const generatedCardContainerEl = document.getElementById(
+        'generated-card-container'
+      );
+      const generatedCardImageEl = document.getElementById(
+        'generated-card-image'
+      );
+      const downloadCardBtnEl = document.getElementById('download-card-btn');
+
+      // --- Game State & Data ---
+      let currentMission = 0;
+      let uploadedImageBase64 = null;
+      const missions = [
+        {
+          // Mission 0
+          text: `<p>Welcome to your new command. This is the freighter ship 'The Variable'. Your first task is to initialize the cargo system.</p><p class="mt-4"><strong>Open your browser's developer console now.</strong></p><p class="text-cyan-300 text-sm">(Usually by pressing F12, or Ctrl+Shift+I / Cmd+Opt+I).</p><p class="mt-2">The ship's command interface, named <code>ship</code>, is ready for your instructions in the console. Type <code>ship.start()</code> and press Enter to begin.</p>`,
+          target: { command: 'start' },
+        },
+        {
+          // Mission 1
+          text: `<p>Sensors are offline. We need to manually log the weights of our cargo holds.</p><p>In the console, declare a variable for Cargo Hold A. Use the <code>let</code> keyword, name it <code>cargoA_weight</code>, and assign it the number <code>1500</code>.</p><p class="mt-4">Once you've done that, use the ship's command system to log the data. Type:</p><p><code>ship.log_cargo('A', cargoA_weight)</code></p>`,
+          target: {
+            command: 'log_cargo',
+            hold: 'A',
+            value: 1500,
+            type: 'number',
+          },
+        },
+        {
+          // Mission 2
+          text: `<p>Good work! Now let's log Cargo Hold B, which weighs <code>3250</code>kg. Create a variable named <code>cargoB_weight</code>.</p><p>We also need our destination. Since this cannot change mid-flight, use a <code>const</code> variable named <code>destination</code> and assign it the string <code>"Mars"</code>.</p><p class="mt-4">Log the cargo and set destination:</p><p><code>ship.log_cargo('B', cargoB_weight)</code></p><p><code>ship.set_destination(destination)</code></p>`,
+          target: [
+            { command: 'log_cargo', hold: 'B', value: 3250, type: 'number' },
+            { command: 'set_destination', value: 'Mars', type: 'string' },
+          ],
+          completedTasks: [],
+        },
+        {
+          // Mission 3
+          text: `<p>Time for calculations! We need the total cargo weight. Create a variable <code>totalWeight</code> by adding <code>cargoA_weight</code> and <code>cargoB_weight</code> together using the <code>+</code> operator.</p><p class="mt-4">Submit your calculation:</p><p><code>ship.verify_weight(totalWeight)</code></p>`,
+          target: {
+            command: 'verify_weight',
+            value: 4750,
+            type: 'number',
+          },
+        },
+        {
+          // Mission 4
+          text: `<p>Excellent math! Now let's set up crew information. Create these variables:</p><ul class="list-disc ml-6 mt-2"><li><code>captainName</code> with your name as a string</li><li><code>crewSize</code> with the number <code>5</code></li><li><code>shipReady</code> with the boolean <code>true</code></li></ul><p class="mt-4">Report crew status:</p><p><code>ship.report_crew(captainName, crewSize, shipReady)</code></p>`,
+          target: {
+            command: 'report_crew',
+            param1Type: 'string',
+            param2Value: 5,
+            param2Type: 'number',
+            param3Value: true,
+            param3Type: 'boolean',
+          },
+        },
+        {
+          // Mission 5
+          text: `<p>Let's practice string concatenation! Create a variable <code>missionReport</code> that combines multiple pieces of information.</p><p>Use the <code>+</code> operator to combine strings:</p><p><code>const missionReport = "Captain " + captainName + " commanding " + crewSize + " crew members"</code></p><p class="mt-4">Submit your report:</p><p><code>ship.submit_report(missionReport)</code></p>`,
+          target: {
+            command: 'submit_report',
+            mustContain: ['Captain', 'commanding', 'crew members'],
+            type: 'string',
+          },
+        },
+        {
+          // Mission 6
+          text: `<p>Time for fuel calculations! We need to calculate fuel requirements for our journey.</p><p>Create these variables:</p><ul class="list-disc ml-6 mt-2"><li><code>distanceToMars</code> = <code>300</code> (million km)</li><li><code>fuelPerKm</code> = <code>2</code> (liters per km)</li><li><code>totalFuelNeeded</code> = distance × fuel rate</li></ul><p class="mt-4">Calculate and report:</p><p><code>ship.calculate_fuel(totalFuelNeeded)</code></p>`,
+          target: {
+            command: 'calculate_fuel',
+            value: 600,
+            type: 'number',
+          },
+        },
+        {
+          // Mission 7
+          text: `<p>Final system checks! Let's verify our launch conditions using comparison operators.</p><p>Create these boolean variables:</p><ul class="list-disc ml-6 mt-2"><li><code>weightOK</code> = check if <code>totalWeight</code> is less than <code>5000</code></li><li><code>fuelOK</code> = check if <code>totalFuelNeeded</code> is greater than <code>500</code></li><li><code>crewOK</code> = check if <code>crewSize</code> equals <code>5</code></li></ul><p class="mt-4">Submit final checks:</p><p><code>ship.final_check(weightOK, fuelOK, crewOK)</code></p>`,
+          target: [
+            { command: 'final_check', param1: true, param2: true, param3: true },
+          ],
+          completedTasks: [],
+        },
+        {
+          // Mission 8
+          text: `<p class="text-green-400 text-glow">Outstanding work, Commander!</p><p>You have successfully mastered the fundamentals of JavaScript programming:</p><ul class="list-disc ml-6 mt-2 text-sm"><li>Variables with <code>let</code> and <code>const</code></li><li>Data types: Strings, Numbers, and Booleans</li><li>Math operators: <code>+</code>, <code>*</code>, <code>/</code></li><li>Comparison operators: <code>&lt;</code>, <code>&gt;</code>, <code>===</code></li><li>String concatenation</li></ul><p class="mt-4 font-bold text-cyan-300">All systems are go! Ready for launch!</p>`,
+        },
+      ];
+
+      function typeText(element, text) {
+        element.innerHTML = text.trim();
+      }
+
+      function logToConsole(message, type = 'info') {
+        const colors = {
+          info: 'text-green-400',
+          error: 'text-red-500',
+          warn: 'text-yellow-500',
+          success: 'text-cyan-400 text-glow',
+        };
+        const logEntry = document.createElement('p');
+        logEntry.className = `whitespace-pre-wrap break-words ${colors[type]}`;
+        logEntry.innerHTML = `> ${message}`;
+        consoleLogEl.appendChild(logEntry);
+        consoleLogEl.scrollTop = consoleLogEl.scrollHeight;
+      }
+
+      function loadMission(missionIndex) {
+        const mission = missions[missionIndex];
+        typeText(missionTextEl, mission.text);
+      }
+
+      function advanceMission() {
+        if (currentMission < missions.length - 1) {
+          currentMission++;
+          if (Array.isArray(missions[currentMission].target)) {
+            missions[currentMission].completedTasks = [];
+          }
+          loadMission(currentMission);
+          logToConsole(`SUCCESS: Mission objectives updated.`, 'success');
+          if (currentMission === missions.length - 1) {
+            setTimeout(() => {
+              launchContainerEl.classList.remove('hidden');
+            }, 1000);
+          }
+        }
+      }
+
+      function triggerVictoryAnimation() {
+        gameUiEl.style.opacity = '0';
+        launchContainerEl.classList.add('hidden');
+
+        setTimeout(() => {
+          victoryOverlayEl.classList.remove('hidden');
+          victoryOverlayEl.classList.add('is-active');
+
+          setTimeout(() => {
+            const rocketEl = victoryOverlayEl.querySelector('#rocket');
+            const marsEl = victoryOverlayEl.querySelector('#mars');
+            rocketEl.classList.remove('opacity-0');
+
+            const marsRect = marsEl.getBoundingClientRect();
+            const rocketRect = rocketEl.getBoundingClientRect();
+            const rocketW = rocketRect.width || 75;
+            const rocketH = rocketRect.height || 150;
+            const startX = window.innerWidth / 2 - rocketW / 2;
+            const startY = window.innerHeight;
+            const endX = marsRect.left + marsRect.width / 2 - rocketW / 2;
+            const endY = marsRect.top + marsRect.height / 2 - rocketH / 2;
+            const midX = startX + (endX - startX) * 0.5;
+            const midY = startY - (startY - endY) * 0.8;
+
+            const keyframes = `@keyframes dynamicLaunch { 0% { transform: translate(${startX}px, ${startY}px) rotate(0deg); opacity: 1; } 25% { transform: translate(${midX}px, ${midY}px) rotate(-45deg); } 100% { transform: translate(${endX}px, ${endY}px) rotate(77deg); opacity: 1; } }`;
+
+            let dynamicStyle = document.getElementById('dynamic-styles');
+            if (!dynamicStyle) {
+              dynamicStyle = document.createElement('style');
+              dynamicStyle.id = 'dynamic-styles';
+              document.head.appendChild(dynamicStyle);
+            }
+            dynamicStyle.innerHTML = keyframes;
+            rocketEl.style.animation =
+              'dynamicLaunch 3.5s cubic-bezier(0.5, 0, 0.5, 1) forwards';
+          }, 500);
+        }, 500);
+      }
+
+      function checkMultiTaskCompletion(mission) {
+        if (mission.completedTasks.length === mission.target.length) {
+          setTimeout(advanceMission, 1000);
+        }
+      }
+
+      const ship = {
+        start() {
+          if (currentMission === 0) {
+            logToConsole('Ship systems activated. Welcome, Commander.');
+            advanceMission();
+          } else {
+            logToConsole('Systems already active.', 'warn');
+          }
+        },
+        log_cargo(hold, value) {
+          const mission = missions[currentMission];
+          let target;
+          if (Array.isArray(mission.target)) {
+            target = mission.target.find(
+              (t) => t.command === 'log_cargo' && t.hold === hold
+            );
+          } else {
+            target = mission.target;
+          }
+
+          if (
+            !target ||
+            target.command !== 'log_cargo' ||
+            target.hold !== hold
+          ) {
+            logToConsole(
+              `ERROR: Invalid command for current mission objective.`,
+              'error'
+            );
+            return;
+          }
+          if (typeof value !== target.type) {
+            logToConsole(
+              `ERROR: Data type mismatch. Expected a ${target.type}.`,
+              'error'
+            );
+            return;
+          }
+          if (value !== target.value) {
+            logToConsole(`ERROR: Incorrect value.`, 'error');
+            return;
+          }
+          logToConsole(
+            `Cargo Hold ${hold} weight of ${value}kg logged successfully.`
+          );
+
+          if (hold === 'A') {
+            cargoAEl.classList.replace('border-slate-700', 'border-green-500');
+            const statusEl = cargoAEl.querySelector('p:nth-child(2) span');
+            statusEl.textContent = 'LOGGED';
+            statusEl.classList.replace('text-yellow-500', 'text-green-500');
+            cargoAWeightEl.textContent = value;
+            cargoAWeightEl.classList.replace(
+              'text-yellow-500',
+              'text-green-500'
+            );
+            advanceMission();
+          } else if (hold === 'B') {
+            cargoBEl.classList.replace('border-slate-700', 'border-green-500');
+            const statusEl = cargoBEl.querySelector('p:nth-child(2) span');
+            statusEl.textContent = 'LOGGED';
+            statusEl.classList.replace('text-yellow-500', 'text-green-500');
+            cargoBWeightEl.textContent = value;
+            cargoBWeightEl.classList.replace(
+              'text-yellow-500',
+              'text-green-500'
+            );
+            mission.completedTasks.push('log_cargo');
+            checkMultiTaskCompletion(mission);
+          }
+        },
+        set_destination(value) {
+          const mission = missions[currentMission];
+          const target = mission.target.find(
+            (t) => t.command === 'set_destination'
+          );
+          if (!target || mission.completedTasks.includes('set_destination')) {
+            logToConsole(
+              `ERROR: Invalid command or destination already set.`,
+              'error'
+            );
+            return;
+          }
+          if (typeof value !== target.type) {
+            logToConsole(
+              `ERROR: Data type mismatch. Expected a ${target.type}.`,
+              'error'
+            );
+            return;
+          }
+          if (value !== target.value) {
+            logToConsole(
+              `ERROR: Incorrect destination. We are heading to ${target.value}.`,
+              'error'
+            );
+            return;
+          }
+          logToConsole(`Destination locked: ${value}.`);
+          mission.completedTasks.push('set_destination');
+          checkMultiTaskCompletion(mission);
+        },
+        verify_weight(value) {
+          const mission = missions[currentMission];
+          let target;
+          if (Array.isArray(mission.target)) {
+            target = mission.target.find((t) => t.command === 'verify_weight');
+          } else {
+            target = mission.target;
+          }
+
+          if (!target || target.command !== 'verify_weight') {
+            logToConsole(
+              `ERROR: Invalid command for current mission objective.`,
+              'error'
+            );
+            return;
+          }
+          if (typeof value !== target.type) {
+            logToConsole(
+              `ERROR: Data type mismatch. Expected a ${target.type}.`,
+              'error'
+            );
+            return;
+          }
+          if (value !== target.value) {
+            logToConsole(
+              `ERROR: Calculation incorrect. Re-check your addition.`,
+              'error'
+            );
+            return;
+          }
+          logToConsole(`Total weight ${value}kg verified.`);
+
+          if (Array.isArray(mission.target)) {
+            mission.completedTasks.push('verify_weight');
+            checkMultiTaskCompletion(mission);
+          } else {
+            advanceMission();
+          }
+        },
+        verify_engines(value) {
+          const mission = missions[currentMission];
+          const target = mission.target.find(
+            (t) => t.command === 'verify_engines'
+          );
+          if (!target || mission.completedTasks.includes('verify_engines')) {
+            logToConsole(
+              `ERROR: Invalid command or engines already verified.`,
+              'error'
+            );
+            return;
+          }
+          if (typeof value !== target.type) {
+            logToConsole(
+              `ERROR: Data type mismatch. Expected a ${target.type}.`,
+              'error'
+            );
+            return;
+          }
+          if (value !== target.value) {
+            logToConsole(
+              `ERROR: Engine status must be 'true' for takeoff.`,
+              'error'
+            );
+            return;
+          }
+          logToConsole(`Engine status verified: READY.`);
+          engineStatusEl.textContent = 'NOMINAL';
+          engineStatusEl.classList.replace('text-yellow-500', 'text-green-500');
+          systemsPanelEl.classList.replace(
+            'border-slate-700',
+            'border-green-500'
+          );
+          mission.completedTasks.push('verify_engines');
+          checkMultiTaskCompletion(mission);
+        },
+        report_crew(name, size, ready) {
+          const mission = missions[currentMission];
+          const target = mission.target;
+
+          if (!target || target.command !== 'report_crew') {
+            logToConsole(
+              `ERROR: Invalid command for current mission objective.`,
+              'error'
+            );
+            return;
+          }
+          if (typeof name !== target.param1Type) {
+            logToConsole(
+              `ERROR: Captain name must be a ${target.param1Type}.`,
+              'error'
+            );
+            return;
+          }
+          if (typeof size !== target.param2Type || size !== target.param2Value) {
+            logToConsole(
+              `ERROR: Crew size must be ${target.param2Value}.`,
+              'error'
+            );
+            return;
+          }
+          if (typeof ready !== target.param3Type || ready !== target.param3Value) {
+            logToConsole(
+              `ERROR: Ship ready status must be ${target.param3Value}.`,
+              'error'
+            );
+            return;
+          }
+          logToConsole(`Crew report: Captain ${name}, ${size} crew members, ship ready: ${ready}`);
+          advanceMission();
+        },
+        submit_report(report) {
+          const mission = missions[currentMission];
+          const target = mission.target;
+
+          if (!target || target.command !== 'submit_report') {
+            logToConsole(
+              `ERROR: Invalid command for current mission objective.`,
+              'error'
+            );
+            return;
+          }
+          if (typeof report !== target.type) {
+            logToConsole(
+              `ERROR: Report must be a ${target.type}.`,
+              'error'
+            );
+            return;
+          }
+
+          const missingWords = target.mustContain.filter(word => !report.includes(word));
+          if (missingWords.length > 0) {
+            logToConsole(
+              `ERROR: Report missing required words: ${missingWords.join(', ')}`,
+              'error'
+            );
+            return;
+          }
+
+          logToConsole(`Mission report submitted: ${report}`);
+          advanceMission();
+        },
+        calculate_fuel(fuel) {
+          const mission = missions[currentMission];
+          const target = mission.target;
+
+          if (!target || target.command !== 'calculate_fuel') {
+            logToConsole(
+              `ERROR: Invalid command for current mission objective.`,
+              'error'
+            );
+            return;
+          }
+          if (typeof fuel !== target.type) {
+            logToConsole(
+              `ERROR: Fuel amount must be a ${target.type}.`,
+              'error'
+            );
+            return;
+          }
+          if (fuel !== target.value) {
+            logToConsole(
+              `ERROR: Fuel calculation incorrect. Check your math: distance × fuel rate.`,
+              'error'
+            );
+            return;
+          }
+          logToConsole(`Fuel requirements calculated: ${fuel} million liters.`);
+          advanceMission();
+        },
+        final_check(weight, fuel, crew) {
+          const mission = missions[currentMission];
+          const target = mission.target[0];
+
+          if (!target || target.command !== 'final_check') {
+            logToConsole(
+              `ERROR: Invalid command for current mission objective.`,
+              'error'
+            );
+            return;
+          }
+          if (weight !== target.param1 || fuel !== target.param2 || crew !== target.param3) {
+            logToConsole(
+              `ERROR: Some checks failed. Verify your calculations and comparisons.`,
+              'error'
+            );
+            return;
+          }
+          logToConsole(`All systems check passed! Weight: ${weight}, Fuel: ${fuel}, Crew: ${crew}`);
+          advanceMission();
+        },
+      };
+
+      function runBootSequence() {
+        logToConsole('Ship systems booting... STANDBY.');
+        setTimeout(() => {
+          logToConsole(
+            'Systems ready. Awaiting your command, Commander.',
+            'success'
+          );
+          console.log(
+            "Welcome, Commander! The ship's command object 'ship' is available. Start with ship.start()"
+          );
+        }, 1500);
+      }
+
+      function resetGame() {
+        victoryOverlayEl.classList.add('hidden');
+        victoryOverlayEl.classList.remove('is-active');
+        gameUiEl.style.opacity = '1';
+
+        const rocketEl = victoryOverlayEl.querySelector('#rocket');
+        rocketEl.style.animation = '';
+        rocketEl.classList.add('opacity-0');
+
+        currentMission = 0;
+        if (Array.isArray(missions[currentMission].target)) {
+          missions[currentMission].completedTasks = [];
+        }
+
+        const elsToReset = [
+          {
+            el: cargoAEl,
+            statusSelector: 'p:nth-child(2) span',
+            weightEl: cargoAWeightEl,
+          },
+          {
+            el: cargoBEl,
+            statusSelector: 'p:nth-child(2) span',
+            weightEl: cargoBWeightEl,
+          },
+        ];
+
+        elsToReset.forEach((item) => {
+          item.el.classList.replace('border-green-500', 'border-slate-700');
+          const statusEl = item.el.querySelector(item.statusSelector);
+          statusEl.textContent = 'AWAITING_DATA';
+          statusEl.classList.replace('text-green-500', 'text-yellow-500');
+          item.weightEl.textContent = '...';
+          item.weightEl.classList.replace('text-green-500', 'text-yellow-500');
+        });
+
+        engineStatusEl.textContent = 'STANDBY';
+        engineStatusEl.classList.replace('text-green-500', 'text-yellow-500');
+        systemsPanelEl.classList.replace(
+          'border-green-500',
+          'border-slate-700'
+        );
+
+        consoleLogEl.innerHTML = '';
+        loadMission(0);
+        runBootSequence();
+      }
+
+      // --- Mission Card Generation ---
+      function toggleModal(show = false) {
+        if (show) {
+          cardModalEl.classList.remove('hidden');
+        } else {
+          cardModalEl.classList.add('hidden');
+          resetCardForm();
+        }
+      }
+
+      function resetCardForm() {
+        uploadedImageBase64 = null;
+        imageUploadEl.value = '';
+        if (!localStorage.getItem('geminiApiKey')) {
+          apiKeyInputEl.value = '';
+        }
+        generateCardBtnEl.disabled = true;
+        generatedCardContainerEl.classList.add('hidden');
+        generatedCardImageEl.src = '';
+        generateBtnTextEl.classList.remove('hidden');
+        generateBtnLoadingEl.classList.add('hidden');
+      }
+
+      function loadSavedApiKey() {
+        const savedApiKey = localStorage.getItem('geminiApiKey');
+        if (savedApiKey) {
+          apiKeySectionEl.classList.add('hidden');
+          apiKeySavedEl.classList.remove('hidden');
+          return savedApiKey;
+        }
+        return null;
+      }
+
+      function saveApiKey(apiKey) {
+        localStorage.setItem('geminiApiKey', apiKey);
+        apiKeySectionEl.classList.add('hidden');
+        apiKeySavedEl.classList.remove('hidden');
+      }
+
+      function clearSavedApiKey() {
+        localStorage.removeItem('geminiApiKey');
+        apiKeySectionEl.classList.remove('hidden');
+        apiKeySavedEl.classList.add('hidden');
+        apiKeyInputEl.value = '';
+        validateForm();
+      }
+
+      function validateForm() {
+        const hasImage = uploadedImageBase64 !== null;
+        const savedApiKey = localStorage.getItem('geminiApiKey');
+        const hasApiKey = savedApiKey || apiKeyInputEl.value.trim().length > 0;
+        generateCardBtnEl.disabled = !(hasImage && hasApiKey);
+      }
+
+      async function callGeminiImage(
+        prompt,
+        base64ImageData,
+        apiKey,
+        logoBase64 = null
+      ) {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+
+        const parts = [
+          { text: prompt },
+          {
+            inlineData: { mimeType: 'image/jpeg', data: base64ImageData },
+          },
+        ];
+
+        if (logoBase64) {
+          parts.push({
+            inlineData: { mimeType: 'image/png', data: logoBase64 },
+          });
+        }
+
+        const payload = {
+          contents: [
+            {
+              parts: parts,
+            },
+          ],
+          generationConfig: {
+            responseModalities: ['IMAGE'],
+          },
+        };
+
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(
+              `API Error: ${response.status} ${response.statusText}. ${errorData}`
+            );
+          }
+
+          const result = await response.json();
+          const base64Data = result?.candidates?.[0]?.content?.parts?.find(
+            (p) => p.inlineData
+          )?.inlineData?.data;
+
+          if (!base64Data) {
+            throw new Error('No image data found in API response.');
+          }
+
+          return `data:image/png;base64,${base64Data}`;
+        } catch (error) {
+          console.error('Gemini Image API call failed:', error);
+          throw error;
+        }
+      }
+
+      async function generateMissionCard() {
+        const savedApiKey = localStorage.getItem('geminiApiKey');
+        const currentApiKey = savedApiKey || apiKeyInputEl.value.trim();
+
+        if (!uploadedImageBase64 || !currentApiKey) {
+          return;
+        }
+
+        // Save API key if it's new
+        if (!savedApiKey && apiKeyInputEl.value.trim()) {
+          saveApiKey(apiKeyInputEl.value.trim());
+        }
+
+        // Load the logo image
+        const logoImage = new Image();
+        logoImage.crossOrigin = 'anonymous';
+        logoImage.src = './images/hi-logo.png';
+
+        let logoBase64 = null;
+        try {
+          await new Promise((resolve, reject) => {
+            logoImage.onload = () => {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              canvas.width = logoImage.width;
+              canvas.height = logoImage.height;
+              ctx.drawImage(logoImage, 0, 0);
+              logoBase64 = canvas.toDataURL('image/png').split(',')[1];
+              resolve();
+            };
+            logoImage.onerror = reject;
+          });
+        } catch (error) {
+          console.warn('Could not load logo, continuing without it');
+        }
+
+        const prompt = `Generate an ultra-realistic, cinematic photo. Aspect ratio 1:1 (width equals height). The subject is the person from the provided image, styled as a heroic space commander inside a futuristic spaceship cockpit. Frame the shot as a portrait-style composition that fits perfectly in a square format. They are looking confidently at the camera wearing a sleek space uniform. Through the cockpit window, the planet Mars is visible with its distinctive red surface. The lighting is dramatic and cinematic with blue-tinted lighting from the ship's displays. ${
+          logoBase64
+            ? 'Include the "HYPER ISLAND" logo (shown in the second image) prominently displayed inside the spaceship cockpit, perhaps on a control panel or screen.'
+            : ''
+        } The image MUST include text. At the top, in a bold, stylized futuristic font, it must say "MISSION SUCCESS". At the bottom, in the same font, it must say "MARS ARRIVAL". Ensure perfect spelling and make the text clearly readable with good contrast. High quality, photorealistic, cinematic composition optimized for square format (Aspect Ratio 1:1).`;
+
+        generateBtnTextEl.classList.add('hidden');
+        generateBtnLoadingEl.classList.remove('hidden');
+        generateCardBtnEl.disabled = true;
+
+        try {
+          const generatedImageUrl = await callGeminiImage(
+            prompt,
+            uploadedImageBase64,
+            currentApiKey,
+            logoBase64
+          );
+
+          generatedCardImageEl.src = generatedImageUrl;
+          generatedCardContainerEl.classList.remove('hidden');
+        } catch (error) {
+          alert(`Failed to generate mission card: ${error.message}`);
+        } finally {
+          generateBtnTextEl.classList.remove('hidden');
+          generateBtnLoadingEl.classList.add('hidden');
+          validateForm();
+        }
+      }
+
+      function downloadCard() {
+        if (!generatedCardImageEl.src) return;
+
+        const link = document.createElement('a');
+        link.download = 'mission-success-card.png';
+        link.href = generatedCardImageEl.src;
+        link.click();
+      }
+
+      // Event Listeners
+      window.onload = () => {
+        loadMission(0);
+        runBootSequence();
+
+        // Load saved API key on startup
+        loadSavedApiKey();
+        validateForm();
+
+        launchButtonEl.addEventListener('click', triggerVictoryAnimation);
+        replayButtonEl.addEventListener('click', resetGame);
+        generateCardButtonEl.addEventListener('click', () => toggleModal(true));
+        closeModalEl.addEventListener('click', () => toggleModal(false));
+        clearApiKeyEl.addEventListener('click', clearSavedApiKey);
+
+        imageUploadEl.addEventListener('change', (event) => {
+          const file = event.target.files[0];
+          if (!file) {
+            uploadedImageBase64 = null;
+            validateForm();
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            uploadedImageBase64 = dataUrl.split(',')[1];
+            validateForm();
+          };
+          reader.readAsDataURL(file);
+        });
+
+        apiKeyInputEl.addEventListener('input', validateForm);
+        generateCardBtnEl.addEventListener('click', generateMissionCard);
+        downloadCardBtnEl.addEventListener('click', downloadCard);
+
+        // Close modal when clicking outside
+        cardModalEl.addEventListener('click', (e) => {
+          if (e.target === cardModalEl) {
+            toggleModal(false);
+          }
+        });
+      };
+
+      window.ship = ship;
+    </script>
+  </body>
+</html>

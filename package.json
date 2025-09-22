@@ -8,7 +8,8 @@
     "build": "npm run extract && cross-env NODE_ENV=production webpack --mode production",
     "extract": "node scripts/extractSlideData.js",
     "lint": "eslint ./js/**/* --fix",
-    "serve:prod": "npm run build && npx http-server ./dist -c-1 -o /reveal-multi-slides-template/"
+    "serve:prod": "npm run build && npx http-server ./dist -c-1 -o /reveal-multi-slides-template/",
+    "serve:ff": "npx http-server ./space-firefighter"
   },
   "author": {
     "name": "Muhammad Ahsan Ayaz",
