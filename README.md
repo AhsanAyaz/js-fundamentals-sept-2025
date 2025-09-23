@@ -1,11 +1,26 @@
-## Reveal Multi Slides Boilerplate
+## JavaScript Fundamentals - Sept 2025
 
-This boilerplate allows you to create multiple slides using [Reveal.js](https://revealjs.com/) inside a single repository with support for a devServer as well as for deploying to GitHub pages. 
+This repository contains the slides and lab materials for the 3-day JavaScript Fundamentals course at Hyper Island.
 
+So far, it includes the content for Day 1, which can be found in `content/day-1.md`.
 
 ### Getting started
 
-- 🚀 Click the "Use this template" button on the top right of this repository to create your own
-- 👀 Clone the repository in your machine
-- 📖 Install the dependencies and change all the occurances of "reveal-multi-slides-template" in the whole project including package.json and webpack.config.js
-- 🖌 Continue developing
+To run the slides, use the following command. This will start a development server.
+
+```bash
+npm run dev
+```
+
+### Space Firefighter Lab
+
+You can run this lab in two ways:
+
+1.  **Using the development server:**
+
+    ```bash
+    npm run serve:ff
+    ```
+
+2.  **Opening the file directly:**
+    Open the `space-firefighter/index.html` file in your web browser.

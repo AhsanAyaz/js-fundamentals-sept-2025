@@ -1,8 +1,8 @@
-### **Day 1: An Introduction to JavaScript**
+## Day 1: An Introduction to JavaScript
 
 ---
 
-## Let's talk about your projects...
+### Let's talk about your projects...
 
 You just built some amazing things with HTML and CSS.
 
