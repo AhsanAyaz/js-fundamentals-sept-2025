@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Digital Detective: Logic Lab</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --card: #111827;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #38bdf8; /* cyan */
+        --good: #22c55e;  /* green */
+        --warn: #f59e0b;  /* amber */
+        --code: #1f2937;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+      header {
+        padding: 20px 16px;
+        border-bottom: 1px solid #1f2937;
+      }
+      header h1 { margin: 0; font-size: 20px; letter-spacing: 0.3px; }
+      header p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+
+      main { max-width: 980px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; grid-template-columns: 1fr; }
+      @media (min-width: 900px) { main { grid-template-columns: 1.1fr 0.9fr; } }
+
+      .card { background: var(--card); border: 1px solid #1f2937; border-radius: 10px; padding: 16px; }
+      .card h2 { margin: 0 0 8px; font-size: 18px; color: var(--accent); }
+      .card h3 { margin: 8px 0; font-size: 16px; color: var(--text); }
+      .muted { color: var(--muted); }
+      code { background: var(--code); color: #93c5fd; padding: 2px 6px; border-radius: 4px; }
+      ul { margin: 8px 0 0 18px; }
+
+      .progress-list { list-style: none; padding: 0; margin: 0; }
+      .progress-list li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid #1f2937; }
+      .progress-list li:first-child { border-top: 0; }
+      .dot { width: 10px; height: 10px; border-radius: 50%; background: #334155; display: inline-block; }
+      .dot.done { background: var(--good); box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2); }
+      .status { font-size: 12px; color: var(--muted); margin-left: auto; }
+
+      #log { height: 280px; overflow-y: auto; background: #0b1220; border: 1px solid #1f2937; border-radius: 8px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 13px; }
+      .log-item { margin: 2px 0; white-space: pre-wrap; word-break: break-word; }
+      .log-info { color: #cbd5e1; }
+      .log-clue { color: #fbbf24; }
+      .log-evidence { color: #86efac; }
+      .log-console { color: #93c5fd; }
+
+      .toolbar { display: flex; gap: 8px; align-items: center; }
+      button { background: #1e293b; color: var(--text); border: 1px solid #334155; border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+      button:hover { background: #263445; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🕵️ Digital Detective: Logic Lab</h1>
+      <p>Focus: if/else, for loops, while loops. Open the console (F12).</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Case Briefing</h2>
+        <p class="muted">Work in <code>detective-academy/main.js</code>. Save and refresh to run your code.</p>
+        <h3>What you’ll practice</h3>
+        <ul>
+          <li>Using <code>if</code>/<code>else</code> to pick suspects</li>
+          <li>Looping with <code>for</code> to interview witnesses</li>
+          <li>Looping with <code>while</code> to search until found</li>
+        </ul>
+        <h3>How to start</h3>
+        <ul>
+          <li>Call <code>detective.startInvestigation()</code></li>
+          <li>Run <code>screenSuspects()</code> with an <code>if</code> condition (use <code>suspectDatabase</code>)</li>
+          <li>Use a <code>for</code> loop in <code>conductInterviews()</code></li>
+          <li>Use a <code>while</code> loop in <code>searchForEvidence()</code></li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <div class="toolbar" style="justify-content: space-between; margin-bottom: 8px;">
+          <h2 style="margin: 0;">Investigation Log</h2>
+          <div>
+            <button id="reset-btn">Reset Log</button>
+          </div>
+        </div>
+        <div id="log" aria-live="polite" aria-label="Investigation log"></div>
+      </section>
+
+      <section class="card">
+        <h2>Progress</h2>
+        <ul class="progress-list" id="progress-list">
+          <li>
+            <span class="dot" id="p-start"></span>
+            <span>Start investigation</span>
+            <span class="status" id="s-start">waiting…</span>
+          </li>
+          <li>
+            <span class="dot" id="p-if"></span>
+            <span>Find persons of interest (if/else)</span>
+            <span class="status" id="s-if">waiting…</span>
+          </li>
+          <li>
+            <span class="dot" id="p-for"></span>
+            <span>Interview witnesses (for)</span>
+            <span class="status" id="s-for">waiting…</span>
+          </li>
+          <li>
+            <span class="dot" id="p-while"></span>
+            <span>Search rooms (while)</span>
+            <span class="status" id="s-while">waiting…</span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Quick Reference</h2>
+        <ul>
+          <li><code>detective.log('text')</code> — add a note</li>
+          <li><code>detective.findClue('text')</code> — record a clue</li>
+          <li><code>detective.collectEvidence('text')</code> — collect evidence</li>
+          <li><code>console.log(x)</code> — debug output (see console)</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      // Minimal, beginner-friendly engine compatible with main.js
+      const logEl = document.getElementById('log');
+      const resetBtn = document.getElementById('reset-btn');
+      const progress = {
+        started: false,
+        ifDone: false,
+        forDone: false,
+        whileDone: false,
+        interviewCount: 0
+      };
+
+      // Provide suspect database expected by main.js
+      window.suspectDatabase = [
+        { name: 'Alex Kim', height: 'tall', jacket: 'dark', alibi: false },
+        { name: 'Morgan Lee', height: 'short', jacket: 'light', alibi: true },
+        { name: 'Casey Wong', height: 'tall', jacket: 'dark', alibi: false },
+      ];
+
+      function addLog(text, kind = 'info') {
+        const div = document.createElement('div');
+        div.className = `log-item log-${kind}`;
+        div.textContent = text;
+        logEl.appendChild(div);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function setDone(which, done, note) {
+        const dot = document.getElementById(`p-${which}`);
+        const status = document.getElementById(`s-${which}`);
+        if (done) {
+          dot.classList.add('done');
+          status.textContent = note || 'done';
+        }
+      }
+
+      function refreshProgressUI() {
+        setDone('start', progress.started, 'started');
+        setDone('if', progress.ifDone, 'found');
+        setDone('for', progress.forDone, `${progress.interviewCount} interviewed`);
+        setDone('while', progress.whileDone, 'completed');
+      }
+      window.refreshProgressUI = refreshProgressUI;
+
+      // Expose minimal API used by main.js
+      const detective = {
+        startInvestigation() {
+          if (!progress.started) {
+            progress.started = true;
+            addLog('Investigation started.', 'info');
+            refreshProgressUI();
+          }
+        },
+        log(message) {
+          addLog(`Note: ${message}`, 'info');
+          // Heuristic: count interviews from log text
+          const m = String(message).toLowerCase();
+          if (m.includes('interviewing witness')) {
+            progress.interviewCount += 1;
+            if (progress.interviewCount >= 3) progress.forDone = true;
+            refreshProgressUI();
+          }
+          if (m.includes('evidence found in room') || m.includes('no evidence found in')) {
+            progress.whileDone = true;
+            refreshProgressUI();
+          }
+        },
+        findClue(clue) {
+          addLog(`Clue: ${clue}`, 'clue');
+          const c = String(clue).toLowerCase();
+          if (c.includes('person of interest') || c.includes('suspect identified')) {
+            progress.ifDone = true;
+            refreshProgressUI();
+          }
+        },
+        collectEvidence(item) {
+          addLog(`Evidence: ${item}`, 'evidence');
+        },
+        // Shim to remain compatible with previous mission engine
+        checkMissionCompletion() {
+          // Our simplified lab updates progress heuristically; just refresh UI.
+          refreshProgressUI();
+        }
+      };
+      window.detective = detective;
+
+      // Mirror console.log to the on-page log with a subtle style
+      const _consoleLog = console.log.bind(console);
+      console.log = (...args) => {
+        try { addLog(args.map(String).join(' '), 'console'); } catch {}
+        _consoleLog(...args);
+      };
+
+      resetBtn.addEventListener('click', () => {
+        logEl.innerHTML = '';
+        addLog('Log cleared. Continue your investigation.', 'info');
+      });
+    </script>
+
+    <!-- Student code -->
+    <script src="main.js"></script>
+    <script>
+      // After student code runs, update UI in case they completed steps synchronously
+      setTimeout(() => { (window.refreshProgressUI || (()=>{}))(); }, 0);
+    </script>
+  </body>
+  </html>
