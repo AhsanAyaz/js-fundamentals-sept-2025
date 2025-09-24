@@ -18,3 +18,27 @@
 // console.log(message) - Log a message
 
 // Your code goes below this line:
+
+labyrinth.scan();
+labyrinth.moveDown();
+if (labyrinth.hasBlocker('right')) {
+  labyrinth.clearBlocker('right');
+}
+labyrinth.moveRight();
+for (let i = 0; i < 4; i++) {
+  labyrinth.moveDown();
+}
+
+for (let i = 0; i < 6; i++) {
+  if (labyrinth.isWallAhead('right')) {
+    break;
+  } else {
+    labyrinth.moveRight();
+  }
+}
+for (let i = 0; i < 5; i++) {
+  if (labyrinth.hasWater('down')) {
+    labyrinth.jumpOver('down');
+  }
+  labyrinth.moveDown();
+}
