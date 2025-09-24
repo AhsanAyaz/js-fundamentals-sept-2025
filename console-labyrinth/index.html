@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Console Labyrinth: The Escape</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Fira Code', monospace;
+        background-color: #1a1b26; /* A slightly different dark theme */
+        color: #a9b1d6;
+      }
+
+      /* CRT effect for a retro feel */
+      body::after {
+        content: ' ';
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: linear-gradient(
+            rgba(18, 16, 16, 0) 50%,
+            rgba(0, 0, 0, 0.25) 50%
+          ),
+          linear-gradient(
+            90deg,
+            rgba(255, 0, 0, 0.04),
+            rgba(0, 255, 0, 0.02),
+            rgba(0, 0, 255, 0.04)
+          );
+        z-index: 2;
+        background-size: 100% 2px, 3px 100%;
+        pointer-events: none;
+      }
+
+      .text-glow {
+        text-shadow: 0 0 5px currentColor, 0 0 8px currentColor;
+      }
+
+      .border-glow {
+        box-shadow: 0 0 8px 0px rgba(122, 162, 247, 0.3),
+          inset 0 0 8px 0px rgba(122, 162, 247, 0.3);
+      }
+
+      #command-log::-webkit-scrollbar {
+        width: 8px;
+      }
+      #command-log::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+      #command-log::-webkit-scrollbar-thumb {
+        background-color: #7aa2f7;
+        border-radius: 4px;
+      }
+
+      code {
+        background-color: #292e42;
+        color: #ff9e64; /* Orange for code */
+        padding: 0.2em 0.4em;
+        margin: 0 0.1em;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+
+      /* Labyrinth styles */
+      #labyrinth-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+        gap: 2px;
+        background-color: #101014;
+        border: 2px solid #414868;
+      }
+
+      .cell {
+        aspect-ratio: 1 / 1;
+        transition: background-color 0.3s ease;
+      }
+
+      .path {
+        background-color: #2e3455;
+      }
+      .wall {
+        background-color: #414868;
+      }
+      .player {
+        background-color: #7dcfff;
+        box-shadow: 0 0 10px #7dcfff;
+        border-radius: 50%;
+        transform: scale(0.8);
+        animation: pulse-player 2s infinite;
+      }
+      .exit {
+        background-color: #9ece6a;
+        box-shadow: 0 0 10px #9ece6a;
+        animation: pulse-exit 1.5s infinite;
+      }
+      .debris {
+        background-color: #f7768e;
+        box-shadow: 0 0 8px #f7768e;
+        position: relative;
+        border-radius: 20%;
+        transform: scale(0.9);
+        animation: pulse-debris 1.8s infinite;
+      }
+      .debris::before {
+        content: '⚠️';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.2em;
+      }
+      .water {
+        background-color: #2ac3de;
+        box-shadow: 0 0 12px #2ac3de;
+        position: relative;
+        border-radius: 30%;
+        transform: scale(0.95);
+        animation: pulse-water 2.2s infinite;
+      }
+      .water::before {
+        content: '🌊';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.2em;
+      }
+
+      @keyframes pulse-player {
+        0%,
+        100% {
+          box-shadow: 0 0 10px #7dcfff;
+        }
+        50% {
+          box-shadow: 0 0 20px #7dcfff;
+        }
+      }
+      @keyframes pulse-exit {
+        0%,
+        100% {
+          background-color: #9ece6a;
+        }
+        50% {
+          background-color: #c5f0a9;
+        }
+      }
+      @keyframes pulse-debris {
+        0%,
+        100% {
+          box-shadow: 0 0 8px #f7768e;
+          background-color: #f7768e;
+        }
+        50% {
+          box-shadow: 0 0 15px #f7768e;
+          background-color: #ff9bb3;
+        }
+      }
+      @keyframes pulse-water {
+        0%,
+        100% {
+          box-shadow: 0 0 12px #2ac3de;
+          background-color: #2ac3de;
+        }
+        50% {
+          box-shadow: 0 0 20px #2ac3de;
+          background-color: #4fd1ea;
+        }
+      }
+
+      #victory-overlay.is-active #victory-text {
+        opacity: 1;
+        transform: scale(1);
+        transition: all 0.8s 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      #victory-overlay.is-active #mastery-achievements {
+        opacity: 1;
+        transform: scale(1);
+        transition: all 0.8s 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .fade-in {
+        animation: fadeIn 1s ease-in forwards;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body class="p-4 lg:p-8 flex items-center justify-center min-h-screen">
+    <main
+      id="game-ui"
+      class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 border border-[#7aa2f7]/50 bg-[#1f2335]/50 p-6 rounded-lg border-glow backdrop-blur-sm"
+    >
+      <!-- Left Panel: Mission & Log -->
+      <div class="flex flex-col gap-6">
+        <div class="bg-[#1f2335]/50 p-6 rounded-md border border-slate-700">
+          <h2
+            class="text-2xl font-bold text-[#7aa2f7] text-glow mb-4 flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="mr-3"
+            >
+              <path
+                d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+              />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+            Mission Objectives
+            <span
+              id="mission-counter"
+              class="text-sm text-blue-400 ml-2"
+            ></span>
+          </h2>
+          <div id="mission-text" class="text-slate-300 space-y-4"></div>
+        </div>
+        <div
+          class="bg-black/70 p-4 rounded-md border border-slate-700 h-64 flex flex-col"
+        >
+          <h3
+            class="text-lg text-[#9ece6a] text-glow flex items-center mb-2 shrink-0"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="w-5 h-5 mr-2"
+            >
+              <polyline points="4 17 10 11 4 5" />
+              <line x1="12" y1="19" x2="20" y2="19" />
+            </svg>
+            Command Log
+          </h3>
+          <div
+            id="command-log"
+            class="flex-grow overflow-y-auto pr-2 text-[#9ece6a] text-sm"
+          ></div>
+        </div>
+      </div>
+      <!-- Right Panel: Labyrinth -->
+      <div
+        class="bg-[#1f2335]/50 p-6 rounded-md border border-slate-700 flex flex-col items-center justify-center gap-4"
+      >
+        <div id="labyrinth-grid" class="w-full max-w-md aspect-square"></div>
+
+        <!-- System Failure Panel -->
+        <div
+          id="system-failure-panel"
+          class="hidden w-full max-w-md bg-red-900/50 border-2 border-red-500 rounded-lg p-4 text-center"
+        >
+          <h3 class="text-2xl font-bold text-red-400 text-glow mb-2">
+            ⚠️ SYSTEM FAILURE ⚠️
+          </h3>
+          <p class="text-red-300 mb-4">Critical damage from wall collisions!</p>
+          <button
+            id="restart-button"
+            class="text-lg font-bold text-white bg-red-700/80 border-2 border-red-500 rounded-lg px-4 py-2 backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:bg-red-600/80"
+          >
+            Restart Mission
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Victory Animation Overlay -->
+    <div
+      id="victory-overlay"
+      class="hidden fixed inset-0 bg-black/80 z-50 backdrop-blur-sm"
+    >
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+        <p
+          id="victory-text"
+          class="text-4xl text-[#9ece6a] text-glow opacity-0 transform scale-50 mb-6"
+        >
+          LABYRINTH ESCAPED
+        </p>
+        <div id="mastery-achievements" class="opacity-0 transform scale-50 transition-all duration-500 delay-1000">
+          <h3 class="text-xl font-bold text-white mb-3">🎓 You have successfully mastered:</h3>
+          <ul class="text-white text-left space-y-1 max-w-sm">
+            <li>✅ Basic JavaScript syntax and method calls</li>
+            <li>✅ Conditional statements (if/else)</li>
+            <li>✅ For loops and break statements</li>
+            <li>✅ Defensive programming principles</li>
+          </ul>
+        </div>
+      </div>
+      <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4">
+        <button
+          id="close-victory-button"
+          class="text-lg font-bold text-white bg-blue-600/80 border-2 border-blue-400 rounded-lg px-4 py-2 backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:bg-blue-500/80"
+        >
+          Close
+        </button>
+        <button
+          id="replay-button"
+          class="text-xl font-bold text-white bg-slate-700/80 border-2 border-slate-500 rounded-lg px-6 py-3 backdrop-blur-sm transition-transform duration-200 hover:scale-105"
+        >
+          Run Simulation Again
+        </button>
+        <button
+          id="generate-certificate-button"
+          class="text-xl font-bold text-white bg-green-600/80 border-2 border-green-400 rounded-lg px-6 py-3 backdrop-blur-sm transition-transform duration-200 hover:scale-105"
+        >
+          Generate Exploration Certificate
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // --- DOM Elements ---
+      const missionTextEl = document.getElementById('mission-text');
+      const commandLogEl = document.getElementById('command-log');
+      const labyrinthGridEl = document.getElementById('labyrinth-grid');
+      const victoryOverlayEl = document.getElementById('victory-overlay');
+      const replayButtonEl = document.getElementById('replay-button');
+      const closeVictoryButtonEl = document.getElementById(
+        'close-victory-button'
+      );
+      const systemFailurePanelEl = document.getElementById(
+        'system-failure-panel'
+      );
+      const restartButtonEl = document.getElementById('restart-button');
+
+      // --- Game State & Data ---
+      let currentMission = 0;
+      let playerPos = { x: 1, y: 1 };
+      let blockerPresent = false; // Track if there's a blocker on the path
+      let debrisCleared = false; // Track if Mission 2 debris has been cleared
+      let collisionCount = 0; // Track wall collisions
+      let waterPresent = false; // Track if there's water at the final step
+      let waterPositions = []; // Track random water positions on vertical path
+      let uploadedCertificateImageBase64 = null; // Track uploaded image for certificate generation
+
+      const mazeLayout = [
+        // 0: path, 1: wall, 2: player, 3: exit, 4: debris, 5: water
+        // x: 0  1  2  3  4  5  6  7  8  9
+        /*y=0*/ [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        /*y=1*/ [1, 2, 1, 1, 1, 1, 1, 1, 1, 1], // Player at (1,1), Wall at (2,1) for mission 3
+        /*y=2*/ [1, 0, 4, 1, 1, 1, 1, 1, 1, 1], // Path at (1,2), Debris at (2,2)
+        /*y=3*/ [1, 1, 0, 1, 1, 1, 1, 1, 1, 1], // Path at (2,3)
+        /*y=4*/ [1, 1, 0, 1, 1, 1, 1, 1, 1, 1], // Path at (2,4)
+        /*y=5*/ [1, 1, 0, 1, 1, 1, 1, 1, 1, 1], // Path at (2,5)
+        /*y=6*/ [1, 1, 0, 0, 0, 0, 0, 1, 1, 1], // Extended horizontal corridor from (2,6) to (6,6)
+        /*y=7*/ [1, 1, 1, 1, 1, 1, 0, 1, 1, 1], // Path at (6,7) - turn down
+        /*y=8*/ [1, 1, 1, 1, 1, 1, 0, 1, 1, 1], // Path at (6,8) - continue down
+        /*y=9*/ [1, 1, 1, 1, 1, 1, 0, 1, 1, 1], // Path at (6,9) - continue down
+        /*y=10*/ [1, 1, 1, 1, 1, 1, 0, 1, 1, 1], // Path at (6,10) - continue down
+        /*y=11*/ [1, 1, 1, 1, 1, 1, 3, 1, 1, 1], // Exit at (6,11)
+      ];
+
+      const missions = [
+        {
+          // Mission 0
+          text: `<p>You're trapped in a digital labyrinth. Your only tool is the <code>labyrinth</code> command interface.</p><p class="mt-4"><strong>Open the main.js file</strong> to write your code. Each time you save and refresh this page, your code will execute automatically.</p><p class="mt-2">First, activate your scanners to map the area. Use the <code>scan</code> method on the labyrinth object. Remember JavaScript function syntax: <code>object.method()</code></p><p class="mt-2">Write your code in main.js, save the file, and refresh this page to see the map appear.</p>`,
+          target: { command: 'scan' },
+        },
+        {
+          // Mission 1
+          text: `<p>Good. We have a map. Now, let's test movement. The corridor below you is clear.</p><p>Use the labyrinth object's movement method to go down one space. Check the available commands list in main.js for the correct method name.</p><p class="mt-2">Save and refresh to see your player move down.</p>`,
+          target: { command: 'moveDown', expectedPos: { x: 1, y: 2 } },
+        },
+        {
+          // Mission 2
+          text: `<p>Excellent! Now you need to move right, but debris might be blocking your path.</p><p>Before moving, you need to:</p><ul class="list-disc ml-6 mt-2"><li>Check if there's a blocker in the 'right' direction using the <code>hasBlocker</code> method</li><li>If there is a blocker, clear it using the <code>clearBlocker</code> method</li><li>Then move right</li></ul><p class="mt-2">Use an <code>if</code> statement to check the condition, and remember to pass the direction as a <code>string</code> parameter.</p>`,
+          target: { command: 'moveRight', expectedPos: { x: 2, y: 2 } },
+        },
+        {
+          // Mission 3
+          text: `<p>Perfect! Now look at the map—there's a long, clear corridor below you. We need to move down 4 steps.</p><p>Instead of writing the same command four times, use a <code>for</code> loop to repeat the action efficiently.</p><p class="mt-2"><strong>For loop syntax reminder:</strong></p><p><code>for (let i = 0; i &lt; numberOfTimes; i++) {</code></p><p><code>&nbsp;&nbsp;// code to repeat goes here</code></p><p><code>}</code></p><p class="mt-2">Write a loop that runs 4 times and moves down each iteration.</p>`,
+          target: {
+            command: 'loopMove',
+            direction: 'Down',
+            count: 4,
+            expectedPos: { x: 2, y: 6 },
+          },
+        },
+        {
+          // Mission 4
+          text: `<p>Now navigate the horizontal corridor! We need to move right, but there's a wall partway through.</p><p style="color: orange;"><strong>Critical:</strong> Each wall collision damages your system. 2 collisions = Game Over!</p><p>Create a <code>for</code> loop that attempts to move right up to 6 times. Inside the loop:</p><ul class="list-disc ml-6 mt-2"><li>Check if there's a wall ahead in the <code>'right'</code> direction</li><li>If there's a wall, use <code>break</code> to exit the loop safely</li><li>If no wall, move right</li></ul><p class="mt-2">The <code>break</code> statement exits a loop early to prevent dangerous collisions!</p>`,
+          target: {
+            command: 'loopWithBreak',
+            direction: 'Right',
+            max: 6,
+            expectedPos: { x: 6, y: 6 },
+          },
+        },
+        {
+          // Mission 5
+          text: `<p>Perfect! You've reached the end of the corridor. Now you need to move down towards the exit.</p><p>Create another <code>for</code> loop to navigate down 5 steps to reach the exit area. Use the same loop structure as before, but change the number of iterations and the movement direction.</p><p class="mt-2">This should be a straightforward loop with no conditionals needed!</p>`,
+          target: {
+            command: 'loop',
+            direction: 'Down',
+            steps: 5,
+            expectedPos: { x: 6, y: 11 },
+          },
+        },
+        {
+          // Mission 6
+          text: `<p class="text-green-400 text-glow">Final challenge! Navigate down to the exit, but water hazards block your path randomly.</p><p>Create a <code>for</code> loop that runs <code>5</code> times. Inside each iteration:</p><ul class="list-disc ml-6 mt-2"><li>Check if there's water in the 'down' direction using <code>hasWater</code></li><li>If there's water, jump over it using <code>jumpOver</code> before moving</li><li>Then move down normally</li></ul><p class="mt-2">This demonstrates defensive programming - always verify conditions before proceeding!</p>`,
+          target: { command: 'waterLoop', expectedPos: { x: 6, y: 11 } },
+        },
+      ];
+
+      function logToConsole(message, type = 'info') {
+        const colors = {
+          info: 'text-[#9ece6a]',
+          error: 'text-red-500',
+          warn: 'text-yellow-500',
+          success: 'text-[#7aa2f7] text-glow',
+        };
+        const logEntry = document.createElement('p');
+        logEntry.className = `whitespace-pre-wrap break-words ${colors[type]}`;
+        logEntry.innerHTML = `> ${message}`;
+        commandLogEl.appendChild(logEntry);
+        commandLogEl.scrollTop = commandLogEl.scrollHeight;
+      }
+
+      function generateRandomWater() {
+        console.log(
+          `[DEBUG] generateRandomWater called, currentMission: ${currentMission}`
+        );
+        waterPositions = [];
+        // Generate exactly one random water on vertical path (6,7) to (6,10) for Mission 7
+        if (currentMission >= 6) {
+          const randomY = 7 + Math.floor(Math.random() * 4); // Random y from 7 to 10
+          waterPositions.push({ x: 6, y: randomY });
+          console.log(`[DEBUG] Generated water at position (6, ${randomY})`);
+          console.log(`[DEBUG] waterPositions array:`, waterPositions);
+        } else {
+          console.log(
+            `[DEBUG] Not generating water - mission ${currentMission} < 6`
+          );
+        }
+      }
+
+      function isWaterAt(x, y) {
+        const hasWater = waterPositions.some(
+          (pos) => pos.x === x && pos.y === y
+        );
+        if (hasWater) {
+          console.log(`[DEBUG] Water found at (${x}, ${y})`);
+        }
+        return hasWater;
+      }
+
+      function drawLabyrinth(firstTime = false) {
+        labyrinthGridEl.innerHTML = '';
+        for (let y = 0; y < mazeLayout.length; y++) {
+          for (let x = 0; x < mazeLayout[y].length; x++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            if (x === playerPos.x && y === playerPos.y) {
+              cell.classList.add('player');
+            } else if (mazeLayout[y][x] === 1) {
+              cell.classList.add('wall');
+            } else if (mazeLayout[y][x] === 3) {
+              cell.classList.add('exit');
+            } else if (mazeLayout[y][x] === 4) {
+              // Debris - only show if not cleared
+              if (!debrisCleared) {
+                cell.classList.add('debris');
+              } else {
+                cell.classList.add('path');
+              }
+            } else if (mazeLayout[y][x] === 5) {
+              cell.classList.add('water');
+            } else if (isWaterAt(x, y)) {
+              // Random water positions for Mission 7
+              cell.classList.add('water');
+            } else {
+              cell.classList.add('path');
+            }
+            if (firstTime) cell.classList.add('fade-in');
+            labyrinthGridEl.appendChild(cell);
+          }
+        }
+      }
+
+      function loadMission(missionIndex) {
+        missionTextEl.innerHTML = missions[missionIndex].text.trim();
+        // Update mission counter
+        const missionCounterEl = document.getElementById('mission-counter');
+        missionCounterEl.textContent = `(${missionIndex + 1}/${
+          missions.length
+        })`;
+      }
+
+      function advanceMission() {
+        if (currentMission < missions.length - 1) {
+          currentMission++;
+          loadMission(currentMission);
+          logToConsole(`SUCCESS: New objective received.`, 'success');
+        }
+      }
+
+      function detectCompletedMissions() {
+        let detectedMission = 0;
+        let mapVisible = labyrinthGridEl.children.length > 0;
+
+        // Debug logging
+        console.log(
+          `[DEBUG] Player position: (${playerPos.x}, ${playerPos.y})`
+        );
+        console.log(`[DEBUG] Current mission: ${currentMission}`);
+        console.log(`[DEBUG] Debris cleared: ${debrisCleared}`);
+
+        // Mission 0: Check if scan was called (map is visible)
+        if (mapVisible) {
+          detectedMission = 1;
+
+          // Mission 1: Check if player moved to (1,2)
+          if (playerPos.y >= 2) {
+            detectedMission = 2;
+
+            // Mission 2: Check if player moved right to (2,2) AND cleared debris
+            if (playerPos.x >= 2 && debrisCleared) {
+              detectedMission = 3;
+
+              // Mission 3: Check if player moved down 4 times to (2,6)
+              if (playerPos.y >= 6 && playerPos.x === 2) {
+                detectedMission = 4;
+
+                // Mission 4: Check if player moved right along corridor (x >= 4)
+                if (playerPos.x >= 4 && playerPos.y === 6) {
+                  detectedMission = 5;
+                }
+              }
+              // Mission 5: Check if player is at end of corridor (exactly 6,6)
+              if (playerPos.x === 6 && playerPos.y === 6) {
+                detectedMission = 6;
+              }
+              // Mission 6: Check if player reached exit at (6,11)
+              if (playerPos.x === 6 && playerPos.y === 11) {
+                // Player completed the game
+                logToConsole(
+                  'Escape sequence initiated... SUCCESS!',
+                  'success'
+                );
+                victoryOverlayEl.classList.remove('hidden');
+                victoryOverlayEl.classList.add('is-active');
+                return missions.length - 1; // Stay at final mission
+              }
+            }
+          }
+        }
+
+        console.log(`[DEBUG] Detected mission: ${detectedMission}`);
+        return detectedMission;
+      }
+
+      function checkPosition(expectedPos) {
+        return playerPos.x === expectedPos.x && playerPos.y === expectedPos.y;
+      }
+
+      function movePlayer(dx, dy) {
+        const newX = playerPos.x + dx;
+        const newY = playerPos.y + dy;
+
+        // Check bounds
+        if (!mazeLayout[newY] || mazeLayout[newY][newX] === undefined) {
+          return false;
+        }
+
+        const targetCell = mazeLayout[newY][newX];
+
+        // Check for walls
+        if (targetCell === 1) {
+          // Wall collision - add damage
+          collisionCount++;
+          logToConsole(`COLLISION! Wall impact ${collisionCount}/2`, 'error');
+
+          if (collisionCount >= 2) {
+            logToConsole('CRITICAL DAMAGE! System failure!', 'error');
+            logToConsole('GAME OVER - Too many collisions!', 'error');
+            setTimeout(() => {
+              systemFailurePanelEl.classList.remove('hidden');
+            }, 500);
+          }
+          return false;
+        }
+
+        // Check for debris
+        if (targetCell === 4 && !debrisCleared) {
+          collisionCount++;
+          logToConsole(
+            `DEBRIS COLLISION! Debris impact ${collisionCount}/2`,
+            'error'
+          );
+          if (collisionCount >= 2) {
+            logToConsole('CRITICAL DAMAGE! System failure!', 'error');
+            logToConsole('GAME OVER - Too many collisions!', 'error');
+            setTimeout(() => {
+              systemFailurePanelEl.classList.remove('hidden');
+            }, 500);
+          } else {
+            logToConsole('Clear the debris first with clearBlocker()!', 'warn');
+          }
+          return false;
+        }
+
+        // Check for water (can't move through water without jumping)
+        if (targetCell === 5 || isWaterAt(newX, newY)) {
+          collisionCount++;
+          logToConsole(
+            `WATER COLLISION! Water impact ${collisionCount}/2`,
+            'error'
+          );
+          if (collisionCount >= 2) {
+            logToConsole('CRITICAL DAMAGE! System failure!', 'error');
+            logToConsole('GAME OVER - Too many collisions!', 'error');
+            setTimeout(() => {
+              systemFailurePanelEl.classList.remove('hidden');
+            }, 500);
+          } else {
+            logToConsole('Use jumpOver() to cross water safely!', 'warn');
+          }
+          return false;
+        }
+
+        // Valid movement
+        playerPos = { x: newX, y: newY };
+        drawLabyrinth();
+        return true;
+      }
+
+      const labyrinth = {
+        scan() {
+          if (currentMission === 0) {
+            logToConsole('Scanners activated. Labyrinth map displayed.');
+            drawLabyrinth(true);
+            advanceMission();
+          } else {
+            logToConsole('Scanners already active.', 'warn');
+          }
+        },
+        moveDown() {
+          if (movePlayer(0, 1)) {
+            // movePlayer returns true on success
+            logToConsole('Moved down.');
+            this._checkMissionProgress();
+          }
+        },
+        moveUp() {
+          if (movePlayer(0, -1)) {
+            logToConsole('Moved up.');
+            this._checkMissionProgress();
+          }
+        },
+        moveLeft() {
+          if (movePlayer(-1, 0)) {
+            logToConsole('Moved left.');
+            this._checkMissionProgress();
+          }
+        },
+        moveRight() {
+          if (movePlayer(1, 0)) {
+            logToConsole('Moved right.');
+            this._checkMissionProgress();
+          }
+        },
+        isWallAhead(direction) {
+          let targetX = playerPos.x;
+          let targetY = playerPos.y;
+          switch (direction.toLowerCase()) {
+            case 'up':
+              targetY--;
+              break;
+            case 'down':
+              targetY++;
+              break;
+            case 'left':
+              targetX--;
+              break;
+            case 'right':
+              targetX++;
+              break;
+            default:
+              logToConsole(`ERROR: Unknown direction '${direction}'`, 'error');
+              return true; // Treat unknown direction as a wall
+          }
+          const isWall = mazeLayout[targetY][targetX] === 1;
+          logToConsole(
+            `Sensor check '${direction}': Wall detected = ${isWall}.`
+          );
+          return isWall;
+        },
+        hasBlocker(direction) {
+          // For Mission 2, there's always debris blocking the right path
+          if (currentMission === 2 && direction.toLowerCase() === 'right') {
+            logToConsole(`Debris detected ${direction}!`);
+            return true;
+          }
+          logToConsole(`No debris ${direction}.`);
+          return false;
+        },
+        clearBlocker(direction) {
+          if (
+            currentMission === 2 &&
+            direction.toLowerCase() === 'right' &&
+            !debrisCleared
+          ) {
+            debrisCleared = true;
+            logToConsole(`Debris cleared from ${direction} path.`);
+            drawLabyrinth(); // Redraw to remove debris visual
+          } else {
+            logToConsole(`No debris to clear ${direction}.`);
+          }
+        },
+        hasWater(direction) {
+          // For Mission 6 (final mission), check if there's water in the specified direction
+          if (currentMission === 6 && direction.toLowerCase() === 'down') {
+            let targetX = playerPos.x;
+            let targetY = playerPos.y + 1; // Check position below
+
+            if (isWaterAt(targetX, targetY)) {
+              logToConsole(`Water detected ${direction}! Must jump to cross.`);
+              return true;
+            }
+          }
+          logToConsole(`No water ${direction}.`);
+          return false;
+        },
+        jumpOver(direction) {
+          if (currentMission === 6 && direction.toLowerCase() === 'down') {
+            let targetX = playerPos.x;
+            let targetY = playerPos.y + 1; // Check position below
+
+            if (isWaterAt(targetX, targetY)) {
+              logToConsole(`Jumping over water ${direction}...`);
+              logToConsole('Safe landing!');
+              // Remove water after jumping over it
+              waterPositions = waterPositions.filter(
+                (pos) => !(pos.x === targetX && pos.y === targetY)
+              );
+              drawLabyrinth(); // Redraw to remove water visual
+              return true;
+            }
+          }
+          logToConsole(`No water to jump over ${direction}.`);
+          return false;
+        },
+        _checkMissionProgress() {
+          // Re-detect mission progress after each action
+          const detectedMission = detectCompletedMissions();
+
+          // Only advance if we've progressed beyond current mission
+          console.log(
+            `[DEBUG] Current mission before check: ${currentMission}, Detected: ${detectedMission}`
+          );
+          if (detectedMission > currentMission) {
+            console.log(
+              `[DEBUG] Advancing mission from ${currentMission} to ${detectedMission}`
+            );
+            currentMission = detectedMission;
+
+            // Check if game is complete
+            if (
+              currentMission >= missions.length - 1 &&
+              playerPos.x === 6 &&
+              playerPos.y === 11
+            ) {
+              logToConsole('Escape sequence initiated... SUCCESS!', 'success');
+              victoryOverlayEl.classList.remove('hidden');
+              victoryOverlayEl.classList.add('is-active');
+              return;
+            }
+
+            // Load the new mission if not complete
+            if (currentMission < missions.length) {
+              // Generate random water for Mission 6
+              if (currentMission === 6) {
+                generateRandomWater();
+              }
+              loadMission(currentMission);
+              logToConsole(
+                'Mission completed! New objective received.',
+                'success'
+              );
+            }
+          }
+        },
+      };
+
+      // --- Monkey-patching console.log for mission 3 ---
+      const originalConsoleLog = console.log;
+      console.log = function (...args) {
+        originalConsoleLog.apply(console, args); // Keep original functionality
+        const message = args.join(' ');
+        if (
+          currentMission === 3 &&
+          message.toLowerCase().includes('path blocked')
+        ) {
+          logToConsole(`Message logged: "${message}"`);
+          logToConsole('Obstacle correctly identified.');
+          advanceMission();
+        }
+      };
+
+      // --- Certificate Generation Functions ---
+      function toggleCertificateModal(show = false) {
+        if (show) {
+          certificateModalEl.classList.remove('hidden');
+          certificateModalEl.classList.add('flex');
+        } else {
+          certificateModalEl.classList.add('hidden');
+          certificateModalEl.classList.remove('flex');
+          resetCertificateForm();
+        }
+      }
+
+      function resetCertificateForm() {
+        uploadedCertificateImageBase64 = null;
+        certificateImageUploadEl.value = '';
+        if (!localStorage.getItem('labyrinthGeminiApiKey')) {
+          certificateApiKeyInputEl.value = '';
+        }
+        generateCertificateBtnEl.disabled = true;
+        generatedCertificateContainerEl.classList.add('hidden');
+        generatedCertificateImageEl.src = '';
+        generateCertificateBtnTextEl.classList.remove('hidden');
+        generateCertificateBtnLoadingEl.classList.add('hidden');
+      }
+
+      function loadSavedCertificateApiKey() {
+        const savedApiKey = localStorage.getItem('labyrinthGeminiApiKey');
+        if (savedApiKey) {
+          certificateApiKeySectionEl.classList.add('hidden');
+          certificateApiKeySavedEl.classList.remove('hidden');
+          return savedApiKey;
+        }
+        return null;
+      }
+
+      function saveCertificateApiKey(apiKey) {
+        localStorage.setItem('labyrinthGeminiApiKey', apiKey);
+        certificateApiKeySectionEl.classList.add('hidden');
+        certificateApiKeySavedEl.classList.remove('hidden');
+      }
+
+      function clearSavedCertificateApiKey() {
+        localStorage.removeItem('labyrinthGeminiApiKey');
+        certificateApiKeySectionEl.classList.remove('hidden');
+        certificateApiKeySavedEl.classList.add('hidden');
+        certificateApiKeyInputEl.value = '';
+        validateCertificateForm();
+      }
+
+      function validateCertificateForm() {
+        const hasImage = uploadedCertificateImageBase64 !== null;
+        const savedApiKey = localStorage.getItem('labyrinthGeminiApiKey');
+        const hasApiKey =
+          savedApiKey || certificateApiKeyInputEl.value.trim().length > 0;
+        generateCertificateBtnEl.disabled = !(hasImage && hasApiKey);
+      }
+
+      async function callGeminiImageForCertificate(
+        prompt,
+        base64ImageData,
+        apiKey,
+        logoBase64 = null
+      ) {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+
+        const parts = [
+          { text: prompt },
+          {
+            inlineData: { mimeType: 'image/jpeg', data: base64ImageData },
+          },
+        ];
+
+        if (logoBase64) {
+          parts.push({
+            inlineData: { mimeType: 'image/png', data: logoBase64 },
+          });
+        }
+
+        const payload = {
+          contents: [
+            {
+              parts: parts,
+            },
+          ],
+          generationConfig: {
+            responseModalities: ['IMAGE'],
+          },
+        };
+
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(
+              `API Error: ${response.status} ${response.statusText}. ${errorData}`
+            );
+          }
+
+          const result = await response.json();
+          const base64Data = result?.candidates?.[0]?.content?.parts?.find(
+            (p) => p.inlineData
+          )?.inlineData?.data;
+
+          if (!base64Data) {
+            throw new Error('No image data found in API response.');
+          }
+
+          return `data:image/png;base64,${base64Data}`;
+        } catch (error) {
+          console.error('Gemini Image API call failed:', error);
+          throw error;
+        }
+      }
+
+      async function generateExplorationCertificate() {
+        const savedApiKey = localStorage.getItem('labyrinthGeminiApiKey');
+        const currentApiKey =
+          savedApiKey || certificateApiKeyInputEl.value.trim();
+
+        if (!uploadedCertificateImageBase64 || !currentApiKey) {
+          return;
+        }
+
+        // Save API key if it's new
+        if (!savedApiKey && certificateApiKeyInputEl.value.trim()) {
+          saveCertificateApiKey(certificateApiKeyInputEl.value.trim());
+        }
+
+        // Load the logo image
+        const logoImage = new Image();
+        logoImage.crossOrigin = 'anonymous';
+        logoImage.src = './images/hi-logo.png';
+
+        let logoBase64 = null;
+        try {
+          await new Promise((resolve, reject) => {
+            logoImage.onload = () => {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              canvas.width = logoImage.width;
+              canvas.height = logoImage.height;
+              ctx.drawImage(logoImage, 0, 0);
+              logoBase64 = canvas.toDataURL('image/png').split(',')[1];
+              resolve();
+            };
+            logoImage.onerror = reject;
+          });
+        } catch (error) {
+          console.warn('Could not load logo, continuing without it');
+        }
+
+        const prompt = `Generate an ultra-realistic, cinematic photo. Aspect ratio 1:1 (width equals height). The subject is the person from the provided image, styled as a heroic nature explorer/wildlife ranger in a mystical ancient forest labyrinth. Frame the shot as a portrait-style composition that fits perfectly in a square format. They are looking confidently at the camera wearing rugged outdoor exploration gear (earth-tone clothing, utility vest, compass, etc.). Behind them is a magical forest maze with towering ancient trees, winding paths, and dappled sunlight filtering through the canopy. Wildlife like deer, rabbits, or birds can be visible in the background. The lighting is warm and natural with golden hour forest lighting. ${
+          logoBase64
+            ? 'Include the "HYPER ISLAND" logo (shown in the second image) prominently displayed on a wooden sign or carved into a tree trunk within the forest setting.'
+            : ''
+        } The image MUST include text. At the top, in a bold, rustic wooden-style font, it must say "LABYRINTH ESCAPED". At the bottom, in the same font, it must say "NATURE'S CHAMPION". Ensure perfect spelling and make the text clearly readable with good contrast against the forest background. High quality, photorealistic, cinematic composition optimized for square format (Aspect Ratio 1:1). Use earthy, natural color palette with greens, browns, and warm golden tones.`;
+
+        generateCertificateBtnTextEl.classList.add('hidden');
+        generateCertificateBtnLoadingEl.classList.remove('hidden');
+        generateCertificateBtnEl.disabled = true;
+
+        try {
+          const generatedImageUrl = await callGeminiImageForCertificate(
+            prompt,
+            uploadedCertificateImageBase64,
+            currentApiKey,
+            logoBase64
+          );
+
+          generatedCertificateImageEl.src = generatedImageUrl;
+          generatedCertificateContainerEl.classList.remove('hidden');
+        } catch (error) {
+          alert(`Failed to generate exploration certificate: ${error.message}`);
+        } finally {
+          generateCertificateBtnTextEl.classList.remove('hidden');
+          generateCertificateBtnLoadingEl.classList.add('hidden');
+          validateCertificateForm();
+        }
+      }
+
+      function downloadCertificate() {
+        if (!generatedCertificateImageEl.src) return;
+
+        const link = document.createElement('a');
+        link.download = 'labyrinth-exploration-certificate.png';
+        link.href = generatedCertificateImageEl.src;
+        link.click();
+      }
+
+      function resetGame() {
+        victoryOverlayEl.classList.add('hidden');
+        victoryOverlayEl.classList.remove('is-active');
+        systemFailurePanelEl.classList.add('hidden'); // Hide failure panel
+        currentMission = 0;
+        playerPos = { x: 1, y: 1 };
+        blockerPresent = Math.random() < 0.5; // 50% chance of blocker
+        debrisCleared = false; // Reset debris state
+        collisionCount = 0; // Reset collision damage
+        waterPresent = Math.random() < 0.5; // 50% chance of water
+        waterPositions = []; // Reset water positions
+        labyrinthGridEl.innerHTML = '';
+        commandLogEl.innerHTML = '';
+        loadMission(0);
+        logToConsole('System rebooted. Awaiting commands.');
+      }
+
+      // Certificate modal elements (declared here since modal is after script)
+      let generateCertificateButtonEl,
+        certificateModalEl,
+        closeCertificateModalEl,
+        certificateImageUploadEl,
+        certificateApiKeyInputEl,
+        certificateApiKeySectionEl,
+        certificateApiKeySavedEl,
+        clearCertificateApiKeyEl,
+        generateCertificateBtnEl,
+        generateCertificateBtnTextEl,
+        generateCertificateBtnLoadingEl,
+        generatedCertificateContainerEl,
+        generatedCertificateImageEl,
+        downloadCertificateBtnEl;
+
+      // --- Event Listeners & Init ---
+      window.onload = () => {
+        // Initialize certificate modal DOM elements
+        generateCertificateButtonEl = document.getElementById(
+          'generate-certificate-button'
+        );
+        certificateModalEl = document.getElementById('certificate-modal');
+        closeCertificateModalEl = document.getElementById(
+          'close-certificate-modal'
+        );
+        certificateImageUploadEl = document.getElementById(
+          'certificate-image-upload'
+        );
+        certificateApiKeyInputEl = document.getElementById(
+          'certificate-api-key-input'
+        );
+        certificateApiKeySectionEl = document.getElementById(
+          'certificate-api-key-section'
+        );
+        certificateApiKeySavedEl = document.getElementById(
+          'certificate-api-key-saved'
+        );
+        clearCertificateApiKeyEl = document.getElementById(
+          'clear-certificate-api-key'
+        );
+        generateCertificateBtnEl = document.getElementById(
+          'generate-certificate-btn'
+        );
+        generateCertificateBtnTextEl = document.getElementById(
+          'generate-certificate-btn-text'
+        );
+        generateCertificateBtnLoadingEl = document.getElementById(
+          'generate-certificate-btn-loading'
+        );
+        generatedCertificateContainerEl = document.getElementById(
+          'generated-certificate-container'
+        );
+        generatedCertificateImageEl = document.getElementById(
+          'generated-certificate-image'
+        );
+        downloadCertificateBtnEl = document.getElementById(
+          'download-certificate-btn'
+        );
+
+        // Reset tracking variables and set random hazards
+        blockerPresent = Math.random() < 0.5; // 50% chance of blocker for Mission 2
+        collisionCount = 0; // Reset collision damage
+        waterPresent = Math.random() < 0.5; // 50% chance of water for Mission 5
+
+        // Wait a short moment for student's code to execute, then detect progress
+        setTimeout(() => {
+          currentMission = detectCompletedMissions();
+
+          // Generate water if on Mission 6 or later
+          console.log(`[DEBUG] Current mission on load: ${currentMission}`);
+          if (currentMission >= 6) {
+            console.log(
+              `[DEBUG] Generating water for mission ${currentMission}`
+            );
+            generateRandomWater();
+            drawLabyrinth(); // Ensure maze redraws with water
+          } else {
+            console.log(`[DEBUG] No water generated - mission too early`);
+          }
+
+          loadMission(currentMission);
+
+          logToConsole('System Initialized. Welcome, Navigator.');
+          if (currentMission === 0) {
+            logToConsole(
+              'Modify main.js and refresh this page to execute your code.'
+            );
+          } else {
+            logToConsole(
+              `Progress detected. Resuming from Mission ${currentMission + 1}.`
+            );
+          }
+        }, 100); // Small delay to ensure student's code runs first
+
+        replayButtonEl.addEventListener('click', resetGame);
+        closeVictoryButtonEl.addEventListener('click', () => {
+          victoryOverlayEl.classList.add('hidden');
+          victoryOverlayEl.classList.remove('is-active');
+        });
+        restartButtonEl.addEventListener('click', resetGame);
+
+        // Certificate generation event listeners
+        generateCertificateButtonEl.addEventListener('click', () =>
+          toggleCertificateModal(true)
+        );
+        closeCertificateModalEl.addEventListener('click', () =>
+          toggleCertificateModal(false)
+        );
+        clearCertificateApiKeyEl.addEventListener(
+          'click',
+          clearSavedCertificateApiKey
+        );
+
+        certificateImageUploadEl.addEventListener('change', (event) => {
+          const file = event.target.files[0];
+          if (!file) {
+            uploadedCertificateImageBase64 = null;
+            validateCertificateForm();
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            uploadedCertificateImageBase64 = dataUrl.split(',')[1];
+            validateCertificateForm();
+          };
+          reader.readAsDataURL(file);
+        });
+
+        certificateApiKeyInputEl.addEventListener(
+          'input',
+          validateCertificateForm
+        );
+        generateCertificateBtnEl.addEventListener(
+          'click',
+          generateExplorationCertificate
+        );
+        downloadCertificateBtnEl.addEventListener('click', downloadCertificate);
+
+        // Close modal when clicking outside
+        certificateModalEl.addEventListener('click', (e) => {
+          if (e.target === certificateModalEl) {
+            toggleCertificateModal(false);
+          }
+        });
+
+        // Load saved API key on startup
+        loadSavedCertificateApiKey();
+        validateCertificateForm();
+      };
+
+      window.labyrinth = labyrinth;
+    </script>
+
+    <!-- Certificate Generation Modal -->
+    <div
+      id="certificate-modal"
+      class="hidden fixed z-50 inset-0 bg-black/90 z-60 items-center justify-center p-4"
+    >
+      <div
+        class="bg-slate-800 rounded-lg border-2 border-green-400 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-2xl font-bold text-green-400 text-glow">
+            Generate Exploration Certificate
+          </h3>
+          <button
+            id="close-certificate-modal"
+            class="text-slate-400 hover:text-white text-2xl font-bold"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="space-y-6">
+          <div>
+            <label class="block text-slate-300 mb-2 font-semibold">
+              Upload Your Photo
+            </label>
+            <input
+              type="file"
+              id="certificate-image-upload"
+              accept="image/*"
+              class="w-full p-3 bg-slate-900 border border-slate-600 rounded text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-green-600 file:text-white hover:file:bg-green-700 transition-colors"
+            />
+            <p class="text-xs text-slate-400 mt-1">
+              JPG, PNG or WebP. Best results with clear face photos.
+            </p>
+          </div>
+
+          <div id="certificate-api-key-section">
+            <label class="block text-slate-300 mb-2 font-semibold">
+              Gemini API Key
+            </label>
+            <input
+              type="password"
+              id="certificate-api-key-input"
+              placeholder="Enter your Gemini API key"
+              class="w-full p-3 bg-slate-900 border border-slate-600 rounded text-slate-300 placeholder-slate-500"
+            />
+            <p class="text-xs text-slate-400 mt-1">
+              Get your free API key at
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                class="text-green-400 underline"
+                >Google AI Studio</a
+              >
+            </p>
+          </div>
+
+          <div id="certificate-api-key-saved" class="hidden">
+            <div
+              class="flex items-center justify-between p-3 bg-green-900/30 border border-green-600 rounded"
+            >
+              <div class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-green-400 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <span class="text-green-400 font-semibold">API Key Saved</span>
+              </div>
+              <button
+                id="clear-certificate-api-key"
+                class="text-slate-400 hover:text-white text-sm underline"
+              >
+                Use Different Key
+              </button>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <button
+              id="generate-certificate-btn"
+              class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed"
+              disabled
+            >
+              <span id="generate-certificate-btn-text"
+                >Generate Certificate</span
+              >
+              <span id="generate-certificate-btn-loading" class="hidden"
+                >Generating...</span
+              >
+            </button>
+          </div>
+
+          <div id="generated-certificate-container" class="hidden text-center">
+            <h4 class="text-lg font-semibold text-slate-300 mb-3">
+              Your Exploration Certificate:
+            </h4>
+            <img
+              id="generated-certificate-image"
+              class="max-w-full h-auto rounded border-2 border-green-400 mx-auto mb-4"
+            />
+            <button
+              id="download-certificate-btn"
+              class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+            >
+              Download Certificate
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Your JavaScript file -->
+    <script src="main.js"></script>
+  </body>
+</html>
