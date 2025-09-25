@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hyper Island: Data Structures Quest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .fira-code {
+        font-family: 'Fira Code', monospace;
+      }
+      .console-output {
+        background-color: #1a1a1a;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        min-height: 100px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        font-size: 0.875rem;
+      }
+      .objective-list li {
+        transition: all 0.3s ease;
+      }
+      .objective-list li.completed {
+        color: #4ade80;
+        text-decoration: line-through;
+      }
+      .step-section {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+      }
+      .step-section.active {
+        display: block;
+        opacity: 1;
+      }
+      .code-block {
+        background-color: #1e293b;
+        color: #e2e8f0;
+        border: 1px solid #334155;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        position: relative;
+      }
+      .code-block button {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background-color: #475569;
+        color: white;
+        border: none;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+      }
+      .code-block:hover button {
+        opacity: 1;
+      }
+      .code-block pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      /* Custom scrollbar for webkit browsers */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 text-gray-200">
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+      <header class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-cyan-400">Data Structures Quest</h1>
+        <p class="text-gray-400 mt-2">
+          Welcome, Hyper Island Developer! Your mission: Master Arrays &
+          Objects.
+        </p>
+      </header>
+
+      <div class="w-full bg-gray-700 rounded-full h-4 mb-12 shadow-inner">
+        <div
+          id="progressBar"
+          class="bg-gradient-to-r from-cyan-500 to-blue-500 h-4 rounded-full transition-all duration-500"
+          style="width: 0%"
+        ></div>
+      </div>
+
+      <main id="lab-content" class="space-y-12">
+        <!-- Step 0: FizzBuzz Warm-up -->
+        <section
+          id="step-0"
+          class="step-section p-6 bg-gray-800 rounded-lg shadow-lg border border-gray-700"
+        >
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">
+              <span class="text-gray-500">LVL 0:</span> The Loop Sentinel's
+              Trial
+            </h2>
+            <span
+              class="text-sm font-semibold bg-gray-700 text-cyan-400 px-3 py-1 rounded-full"
+              >Warm-up</span
+            >
+          </div>
+          <p class="mb-4 text-gray-400">
+            Your first challenge is a classic rite of passage. Open your
+            browser's DevTools console (<kbd>Cmd+Opt+J</kbd> on Mac,
+            <kbd>Ctrl+Shift+J</kbd> on Windows) and write JavaScript to solve
+            the trial.
+          </p>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-semibold mb-2 text-lg">Objectives:</h3>
+              <ul
+                class="objective-list list-inside list-disc space-y-1 text-gray-300"
+              >
+                <li>Write a `for` loop that counts from 1 to 100.</li>
+                <li>For multiples of 3, print "Fizz".</li>
+                <li>For multiples of 5, print "Buzz".</li>
+                <li>For multiples of both, print "FizzBuzz".</li>
+                <li>Otherwise, print the number.</li>
+              </ul>
+              <details
+                class="mt-4 bg-gray-900/50 p-3 rounded-md cursor-pointer"
+              >
+                <summary class="font-semibold text-cyan-400">
+                  Show Solution
+                </summary>
+                <div class="mt-2 code-block">
+                  <pre><code class="language-js fira-code text-sm">for (let i = 1; i <= 100; i++) {
+  const fizz = i % 3 === 0;
+  const buzz = i % 5 === 0;
+  if (fizz && buzz) console.log('FizzBuzz');
+  else if (fizz) console.log('Fizz');
+  else if (buzz) console.log('Buzz');
+  else console.log(i);
+}</code></pre>
+                </div>
+              </details>
+            </div>
+            <div class="flex flex-col justify-between">
+              <div>
+                <h3 class="font-semibold mb-2 text-lg">Instructions:</h3>
+                <ol class="list-decimal list-inside text-gray-400 space-y-2">
+                  <li>Open the DevTools Console.</li>
+                  <li>Type or paste your loop code and press Enter.</li>
+                  <li>Check if the output matches the objectives.</li>
+                  <li>Once you're satisfied, complete the trial!</li>
+                </ol>
+              </div>
+              <button
+                onclick="markStepComplete(0)"
+                class="mt-4 w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-md transition-transform transform hover:scale-105"
+              >
+                Complete Trial
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 1: Arrays -->
+        <section
+          id="step-1"
+          class="step-section p-6 bg-gray-800 rounded-lg shadow-lg border border-gray-700"
+        >
+          <h2 class="text-2xl font-bold mb-4">
+            <span class="text-gray-500">LVL 1:</span> The Order of the Array
+          </h2>
+          <p class="mb-6 text-gray-400">
+            You've passed the trial. Now, learn to manage lists of items. Type
+            the following commands into your console.
+          </p>
+
+          <div class="space-y-8">
+            <div>
+              <h3 class="font-semibold text-lg text-cyan-400">
+                Mission 1.1: Create & Access
+              </h3>
+              <ul
+                id="objectives-1-1"
+                class="objective-list text-sm list-inside list-disc space-y-1"
+              >
+                <li>
+                  Declare a constant `tools` with `['VS Code', 'Git',
+                  'Terminal']`.
+                </li>
+                <li>Log the first item in the `tools` array to the console.</li>
+              </ul>
+              <div class="code-block mt-2">
+                <button onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-js fira-code text-sm">const tools = ['VS Code', 'Git', 'Terminal'];
+console.log(tools[0]);</code></pre>
+              </div>
+              <button
+                onclick="markPartComplete(1, 1)"
+                class="mt-2 bg-slate-600 hover:bg-slate-700 text-white font-bold py-1 px-3 rounded-md text-sm"
+              >
+                Mark as Complete
+              </button>
+            </div>
+            <div>
+              <h3 class="font-semibold text-lg text-cyan-400">
+                Mission 1.2: Mutate the List
+              </h3>
+              <ul
+                id="objectives-1-2"
+                class="objective-list text-sm list-inside list-disc space-y-1"
+              >
+                <li>Start with `let inventory = ['health potion'];`</li>
+                <li>Use `.push()` to add 'mana potion'.</li>
+                <li>Use `.pop()` to remove the last item.</li>
+                <li>Log the final `inventory` array.</li>
+              </ul>
+              <div class="code-block mt-2">
+                <button onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-js fira-code text-sm">let inventory = ['health potion'];
+inventory.push('mana potion');
+console.log(inventory); // Should show two items
+inventory.pop();
+console.log(inventory); // Should show one item</code></pre>
+              </div>
+              <button
+                onclick="markPartComplete(1, 2)"
+                class="mt-2 bg-slate-600 hover:bg-slate-700 text-white font-bold py-1 px-3 rounded-md text-sm"
+              >
+                Mark as Complete
+              </button>
+            </div>
+            <div>
+              <h3 class="font-semibold text-lg text-cyan-400">
+                Mission 1.3: The Grand Tour
+              </h3>
+              <ul
+                id="objectives-1-3"
+                class="objective-list text-sm list-inside list-disc space-y-1"
+              >
+                <li>Given `const levels = ['Forest', 'Cave', 'Castle'];`</li>
+                <li>Use a `for...of` loop to log each level to the console.</li>
+              </ul>
+              <div class="code-block mt-2">
+                <button onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-js fira-code text-sm">const levels = ['Forest', 'Cave', 'Castle'];
+for (const level of levels) {
+  console.log(level);
+}</code></pre>
+              </div>
+              <button
+                onclick="markPartComplete(1, 3)"
+                class="mt-2 bg-slate-600 hover:bg-slate-700 text-white font-bold py-1 px-3 rounded-md text-sm"
+              >
+                Mark as Complete
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 2: Objects -->
+        <section
+          id="step-2"
+          class="step-section p-6 bg-gray-800 rounded-lg shadow-lg border border-gray-700"
+        >
+          <h2 class="text-2xl font-bold mb-4">
+            <span class="text-gray-500">LVL 2:</span> The Scribe's Ledger
+            (Objects)
+          </h2>
+          <p class="mb-6 text-gray-400">
+            Lists are useful, but for structured data, you need an object. Think
+            of it as a detailed profile for a single entity.
+          </p>
+
+          <div class="space-y-8">
+            <div>
+              <h3 class="font-semibold text-lg text-cyan-400">
+                Mission 2.1: Profile a Hero
+              </h3>
+              <ul
+                id="objectives-2-1"
+                class="objective-list text-sm list-inside list-disc space-y-1"
+              >
+                <li>
+                  Create a `hero` object with `name`, `level`, and `isAwake`
+                  properties.
+                </li>
+                <li>Use dot notation to log the hero's name.</li>
+                <li>Use bracket notation to log the hero's level.</li>
+              </ul>
+              <div class="code-block mt-2">
+                <button onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-js fira-code text-sm">const hero = {
+    name: 'Astra',
+    level: 5,
+    isAwake: true
+};
+console.log(hero.name);
+console.log(hero['level']);</code></pre>
+              </div>
+              <button
+                onclick="markPartComplete(2, 1)"
+                class="mt-2 bg-slate-600 hover:bg-slate-700 text-white font-bold py-1 px-3 rounded-md text-sm"
+              >
+                Mark as Complete
+              </button>
+            </div>
+            <div>
+              <h3 class="font-semibold text-lg text-cyan-400">
+                Mission 2.2: The Quest Log
+              </h3>
+              <ul
+                id="objectives-2-2"
+                class="objective-list text-sm list-inside list-disc space-y-1"
+              >
+                <li>Given the `questLog` array of objects...</li>
+                <li>Access and log the `text` of the first quest.</li>
+                <li>
+                  Change the `completed` status of the first quest to `true`.
+                </li>
+                <li>Log the entire modified `questLog`.</li>
+              </ul>
+              <div class="code-block mt-2">
+                <button onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-js fira-code text-sm">let questLog = [
+    { text: 'Find the ancient sword', completed: false },
+    { text: 'Defeat the goblin king', completed: false },
+];
+console.log(questLog[0].text);
+questLog[0].completed = true;
+console.log(questLog);</code></pre>
+              </div>
+              <button
+                onclick="markPartComplete(2, 2)"
+                class="mt-2 bg-slate-600 hover:bg-slate-700 text-white font-bold py-1 px-3 rounded-md text-sm"
+              >
+                Mark as Complete
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 3: To-Do App Logic -->
+        <section
+          id="step-3"
+          class="step-section p-6 bg-gray-800 rounded-lg shadow-lg border border-gray-700"
+        >
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">
+              <span class="text-gray-500">LVL 3:</span> The Logic Architect
+              (Final Boss)
+            </h2>
+            <span
+              class="text-sm font-semibold bg-red-800 text-red-300 px-3 py-1 rounded-full"
+              >Capstone</span
+            >
+          </div>
+          <p class="mb-4 text-gray-400">
+            This is your final challenge. You'll build the "brain" of a To-Do
+            application. No UI, just pure logic. Combine your knowledge of
+            arrays, objects, and functions.
+          </p>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-semibold mb-2 text-lg">Your Mission:</h3>
+              <p class="text-sm text-gray-400 mb-4">
+                Copy the starter code into your console. Then, define each of
+                the three functions (`addTodo`, `toggleTodo`, `removeTodo`) one
+                by one. Test your work as you go!
+              </p>
+              <h4 class="font-semibold mt-6 mb-2">
+                Manual Validation Checklist:
+              </h4>
+              <ul
+                id="objectives-3"
+                class="objective-list list-inside list-disc space-y-2 text-gray-300"
+              >
+                <li>
+                  After defining `addTodo`, run `addTodo('New task')` then
+                  `listTodos()`. Does the new task appear?
+                </li>
+                <li>
+                  After defining `toggleTodo`, run `toggleTodo(2)`. Does the
+                  status of 'Conquer Objects' flip?
+                </li>
+                <li>
+                  After defining `removeTodo`, run `removeTodo(1)`. Is 'Master
+                  Arrays' gone?
+                </li>
+              </ul>
+              <button
+                onclick="markStepComplete(3)"
+                class="mt-8 w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-md transition-transform transform hover:scale-105"
+              >
+                I Have Built and Tested My Functions
+              </button>
+            </div>
+            <div>
+              <h3 class="font-semibold mb-2 text-lg">Starter Code:</h3>
+              <div class="code-block h-96 overflow-y-auto">
+                <button onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-js fira-code text-sm">
+let todos = [
+    { id: 1, text: 'Master Arrays', completed: true },
+    { id: 2, text: 'Conquer Objects', completed: false },
+];
+
+function listTodos() {
+    console.log('--- TODO LIST ---');
+    if (todos.length === 0) {
+        console.log('All clear! Nothing to do.');
+        return;
+    }
+    for (const t of todos) {
+        const status = t.completed ? '✅' : '⬜️';
+        console.log(`${status} (id: ${t.id}) ${t.text}`);
+    }
+    console.log('-----------------');
+}
+
+// 1. Define addTodo(text)
+// Hint: const id = Date.now();
+// todos.push({ id, text, completed: false });
+function addTodo(text) {
+    // Your implementation
+}
+
+
+// 2. Define toggleTodo(id)
+// Hint: Loop through todos. If todo.id === id,
+// flip todo.completed.
+function toggleTodo(id) {
+    // Your implementation
+}
+
+
+// 3. Define removeTodo(id)
+// Hint: todos = todos.filter(t => t.id !== id);
+function removeTodo(id) {
+    // Your implementation
+}
+
+// --- Initial check ---
+listTodos();
+                            </code></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 4: DOM Teaser -->
+        <section
+          id="step-4"
+          class="step-section p-6 bg-gray-800 rounded-lg shadow-lg border border-gray-700"
+        >
+          <h2 class="text-2xl font-bold mb-4">
+            <span class="text-gray-500">LVL 4:</span> A Glimpse of the Frontend
+          </h2>
+          <p class="mb-4 text-gray-400">
+            You've built a powerful brain. Congratulations! Now see how that
+            logic connects to a real webpage. This is a sneak peek—we'll dive
+            deep into the DOM next week.
+          </p>
+          <div class="flex items-center space-x-4 mb-4">
+            <button
+              onclick="runDOMPreview()"
+              class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-md"
+            >
+              Run DOM Preview
+            </button>
+            <button
+              onclick="markStepComplete(4)"
+              class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-md transition-transform transform hover:scale-105"
+            >
+              Complete Quest
+            </button>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="code-block">
+              <pre><code class="language-js fira-code text-sm">
+// This code uses the LOGIC you built.
+// It finds an HTML element and then loops
+// through a 'todos' array to create list items.
+
+const sampleTodos = [
+    { text: 'Build a JS brain', completed: true },
+    { text: 'Connect to HTML', completed: false }
+];
+
+const todoListElement = document.querySelector('#todo-list-preview');
+
+function render(data) {
+    todoListElement.innerHTML = '';
+    for (const todo of data) {
+        const li = document.createElement('li');
+        li.className = 'p-2 rounded ' + (todo.completed ? 'bg-green-900/50 text-gray-500 line-through' : 'bg-slate-800');
+        li.textContent = ` ${todo.completed ? '✅' : '⬜️'} ${todo.text}`;
+        todoListElement.appendChild(li);
+    }
+}
+                        </code></pre>
+            </div>
+            <div>
+              <h3 class="font-semibold mb-2 text-lg">Live Preview:</h3>
+              <div
+                class="p-4 border border-dashed border-gray-600 rounded-lg min-h-[100px]"
+              >
+                <ul id="todo-list-preview" class="space-y-2">
+                  <li class="text-gray-500">
+                    Click "Run DOM Preview" to see the result...
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Completion Screen -->
+        <section
+          id="step-5"
+          class="step-section text-center p-8 bg-gradient-to-br from-gray-800 to-slate-900 rounded-lg shadow-xl border border-cyan-500"
+        >
+          <h2 class="text-4xl font-bold text-cyan-400 mb-4">Quest Complete!</h2>
+          <p class="text-xl text-gray-300 mb-2">
+            You have mastered the fundamental data structures.
+          </p>
+          <p class="text-gray-400 mb-6">
+            You are now a certified Logic Architect. Your next adventure:
+            connecting this brain to a living, breathing user interface in the
+            DOM!
+          </p>
+          <div class="text-6xl mb-6 animate-pulse">🏆</div>
+          <div class="flex items-center justify-center gap-3 mb-6">
+            <button
+              onclick="toggleDiscoveryModal(true)"
+              class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-md"
+              id="generate-discovery-button"
+            >
+              Generate Discovery Poster
+            </button>
+            <button
+              onclick="restartQuest()"
+              class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md"
+            >
+              Restart Quest
+            </button>
+          </div>
+          <div id="generated-discovery-container" class="hidden mt-6">
+            <h3 class="text-xl font-semibold mb-3 text-cyan-300">Your Poster</h3>
+            <img id="generated-discovery-image" class="mx-auto max-w-md w-full rounded-lg shadow-lg border border-slate-700" alt="Generated discovery poster" />
+            <div class="mt-4">
+              <button
+                id="download-discovery-btn"
+                class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-6 rounded-md"
+              >
+                Download Poster
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const state = {
+        currentStep: 0,
+        totalSteps: 5,
+        progress: {
+          0: { completed: false },
+          1: { completed: false, parts: { 1: false, 2: false, 3: false } },
+          2: { completed: false, parts: { 1: false, 2: false } },
+          3: { completed: false },
+          4: { completed: false },
+        },
+      };
+
+      function copyCode(button) {
+        const pre = button.parentElement.querySelector('pre');
+        const text = pre.innerText;
+
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+
+        // Make the textarea invisible
+        textArea.style.position = 'fixed';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.width = '2em';
+        textArea.style.height = '2em';
+        textArea.style.padding = '0';
+        textArea.style.border = 'none';
+        textArea.style.outline = 'none';
+        textArea.style.boxShadow = 'none';
+        textArea.style.background = 'transparent';
+
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            button.innerText = 'Copied!';
+            setTimeout(() => {
+              button.innerText = 'Copy';
+            }, 2000);
+          } else {
+            console.error('Fallback: Oops, unable to copy');
+            button.innerText = 'Error';
+            setTimeout(() => {
+              button.innerText = 'Copy';
+            }, 2000);
+          }
+        } catch (err) {
+          console.error('Fallback: Oops, unable to copy', err);
+          button.innerText = 'Error';
+          setTimeout(() => {
+            button.innerText = 'Copy';
+          }, 2000);
+        }
+
+        document.body.removeChild(textArea);
+      }
+
+      function markPartComplete(step, part) {
+        if (state.progress[step].parts[part]) return;
+        state.progress[step].parts[part] = true;
+
+        const objectiveListId = `objectives-${step}-${part}`;
+        const list = document.getElementById(objectiveListId);
+        if (list) {
+          list
+            .querySelectorAll('li')
+            .forEach((li) => li.classList.add('completed', 'text-green-400'));
+        }
+
+        const allPartsDone = Object.values(state.progress[step].parts).every(
+          (p) => p
+        );
+        if (allPartsDone) {
+          markStepComplete(step);
+        }
+      }
+
+      function markStepComplete(step) {
+        if (state.progress[step].completed) return;
+        state.progress[step].completed = true;
+
+        updateProgressBar();
+
+        setTimeout(() => {
+          // The final "step" is the completion screen, step index 5. totalSteps is 5, so we go up to index 4.
+          if (step < state.totalSteps) {
+            state.currentStep = step + 1;
+            if (state.currentStep === state.totalSteps) {
+              // Mark step 4 as auto-completed when we move to the final screen.
+              state.progress[4].completed = true;
+              updateProgressBar();
+            }
+            showCurrentStep();
+          }
+        }, 500);
+      }
+
+      function updateProgressBar() {
+        const completedCount = Object.values(state.progress).filter(
+          (p) => p.completed
+        ).length;
+        const percentage = (completedCount / state.totalSteps) * 100;
+        document.getElementById('progressBar').style.width = `${percentage}%`;
+      }
+
+      function showCurrentStep() {
+        document.querySelectorAll('.step-section').forEach((el, index) => {
+          if (index === state.currentStep) {
+            el.classList.add('active');
+          } else {
+            el.classList.remove('active');
+          }
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function runDOMPreview() {
+        const sampleTodos = [
+          { text: 'Build a JS brain', completed: true },
+          { text: 'Connect to HTML', completed: false },
+          { text: 'Style with Tailwind', completed: true },
+          { text: 'Ship it!', completed: false },
+        ];
+
+        const todoListElement = document.querySelector('#todo-list-preview');
+
+        todoListElement.innerHTML = '';
+        for (const todo of sampleTodos) {
+          const li = document.createElement('li');
+          li.className =
+            'p-3 rounded-md transition-all ' +
+            (todo.completed
+              ? 'bg-green-900/50 text-gray-500 line-through'
+              : 'bg-slate-800 text-gray-200');
+          li.textContent = ` ${todo.completed ? '✅' : '⬜️'} ${todo.text}`;
+          todoListElement.appendChild(li);
+        }
+      }
+
+      function restartQuest() {
+        location.reload();
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        showCurrentStep();
+      });
+
+      // --- Discovery Poster Modal & Generation (Gemini) ---
+      let discoveryModalEl;
+      let closeDiscoveryModalEl;
+      let discoveryImageUploadEl;
+      let discoveryApiKeyInputEl;
+      let discoveryApiKeySectionEl;
+      let discoveryApiKeySavedEl;
+      let clearDiscoveryApiKeyEl;
+      let generateDiscoveryBtnEl;
+      let generateDiscoveryBtnTextEl;
+      let generateDiscoveryBtnLoadingEl;
+      let generatedDiscoveryContainerEl;
+      let generatedDiscoveryImageEl;
+      let downloadDiscoveryBtnEl;
+      let uploadedDiscoveryImageBase64 = null;
+
+      function initDiscoveryElements() {
+        // Create modal lazily if not present
+        if (!document.getElementById('discovery-modal')) {
+          const modal = document.createElement('div');
+          modal.id = 'discovery-modal';
+          modal.className = 'hidden fixed z-50 inset-0 bg-black/90 items-center justify-center p-4';
+          modal.innerHTML = `
+            <div class="bg-slate-800 rounded-lg border-2 border-cyan-500 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-cyan-300">Generate Discovery Poster</h3>
+                <button id="close-discovery-modal" class="text-slate-400 hover:text-white text-2xl font-bold">×</button>
+              </div>
+              <div class="space-y-6">
+                <div>
+                  <label class="block text-slate-300 mb-2 font-semibold">Upload Your Photo</label>
+                  <input type="file" id="discovery-image-upload" accept="image/*" class="w-full p-3 bg-slate-900 border border-slate-600 rounded text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-cyan-600 file:text-white hover:file:bg-cyan-700 transition-colors" />
+                  <p class="text-xs text-slate-400 mt-1">JPG, PNG or WebP. Clear, front-facing photo works best.</p>
+                </div>
+                <div id="discovery-api-key-section">
+                  <label class="block text-slate-300 mb-2 font-semibold">Gemini API Key</label>
+                  <input type="password" id="discovery-api-key-input" placeholder="Enter your Gemini API key" class="w-full p-3 bg-slate-900 border border-slate-600 rounded text-slate-300 placeholder-slate-500" />
+                  <p class="text-xs text-slate-400 mt-1">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-cyan-300 underline">Google AI Studio</a></p>
+                </div>
+                <div id="discovery-api-key-saved" class="hidden">
+                  <div class="flex items-center justify-between p-3 bg-cyan-900/30 border border-cyan-600 rounded">
+                    <div class="text-sm text-cyan-200">API key saved in this browser.</div>
+                    <button id="clear-discovery-api-key" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded">Clear</button>
+                  </div>
+                </div>
+                <div>
+                  <button id="generate-discovery-btn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 flex items-center justify-center gap-2" disabled>
+                    <span id="generate-discovery-btn-text">Generate Poster</span>
+                    <span id="generate-discovery-btn-loading" class="hidden animate-pulse">Generating…</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(modal);
+        }
+
+        // Bind elements
+        discoveryModalEl = document.getElementById('discovery-modal');
+        closeDiscoveryModalEl = document.getElementById('close-discovery-modal');
+        discoveryImageUploadEl = document.getElementById('discovery-image-upload');
+        discoveryApiKeyInputEl = document.getElementById('discovery-api-key-input');
+        discoveryApiKeySectionEl = document.getElementById('discovery-api-key-section');
+        discoveryApiKeySavedEl = document.getElementById('discovery-api-key-saved');
+        clearDiscoveryApiKeyEl = document.getElementById('clear-discovery-api-key');
+        generateDiscoveryBtnEl = document.getElementById('generate-discovery-btn');
+        generateDiscoveryBtnTextEl = document.getElementById('generate-discovery-btn-text');
+        generateDiscoveryBtnLoadingEl = document.getElementById('generate-discovery-btn-loading');
+        generatedDiscoveryContainerEl = document.getElementById('generated-discovery-container');
+        generatedDiscoveryImageEl = document.getElementById('generated-discovery-image');
+        downloadDiscoveryBtnEl = document.getElementById('download-discovery-btn');
+
+        // Events
+        closeDiscoveryModalEl.addEventListener('click', () => toggleDiscoveryModal(false));
+        discoveryModalEl.addEventListener('click', (e) => {
+          if (e.target === discoveryModalEl) toggleDiscoveryModal(false);
+        });
+        discoveryImageUploadEl.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (!file) {
+            uploadedDiscoveryImageBase64 = null;
+            validateDiscoveryForm();
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const dataUrl = ev.target.result;
+            uploadedDiscoveryImageBase64 = dataUrl.split(',')[1];
+            validateDiscoveryForm();
+          };
+          reader.readAsDataURL(file);
+        });
+        discoveryApiKeyInputEl.addEventListener('input', validateDiscoveryForm);
+        generateDiscoveryBtnEl.addEventListener('click', generateDiscoveryPoster);
+        downloadDiscoveryBtnEl.addEventListener('click', downloadDiscoveryImage);
+        if (clearDiscoveryApiKeyEl) {
+          clearDiscoveryApiKeyEl.addEventListener('click', clearSavedDiscoveryApiKey);
+        }
+
+        loadSavedDiscoveryApiKey();
+        validateDiscoveryForm();
+      }
+
+      function toggleDiscoveryModal(show = false) {
+        if (!discoveryModalEl) initDiscoveryElements();
+        if (show) {
+          discoveryModalEl.classList.remove('hidden');
+          discoveryModalEl.classList.add('flex');
+        } else {
+          discoveryModalEl.classList.add('hidden');
+          discoveryModalEl.classList.remove('flex');
+          resetDiscoveryForm();
+        }
+      }
+
+      function resetDiscoveryForm() {
+        uploadedDiscoveryImageBase64 = null;
+        if (discoveryImageUploadEl) discoveryImageUploadEl.value = '';
+        if (!localStorage.getItem('todoGeminiApiKey')) {
+          if (discoveryApiKeyInputEl) discoveryApiKeyInputEl.value = '';
+        }
+        if (generateDiscoveryBtnEl) generateDiscoveryBtnEl.disabled = true;
+        if (generatedDiscoveryContainerEl) generatedDiscoveryContainerEl.classList.add('hidden');
+        if (generatedDiscoveryImageEl) generatedDiscoveryImageEl.src = '';
+        if (generateDiscoveryBtnTextEl) generateDiscoveryBtnTextEl.classList.remove('hidden');
+        if (generateDiscoveryBtnLoadingEl) generateDiscoveryBtnLoadingEl.classList.add('hidden');
+      }
+
+      function loadSavedDiscoveryApiKey() {
+        const saved = localStorage.getItem('todoGeminiApiKey');
+        if (saved) {
+          discoveryApiKeySectionEl.classList.add('hidden');
+          discoveryApiKeySavedEl.classList.remove('hidden');
+          return saved;
+        }
+        return null;
+      }
+
+      function saveDiscoveryApiKey(key) {
+        localStorage.setItem('todoGeminiApiKey', key);
+        discoveryApiKeySectionEl.classList.add('hidden');
+        discoveryApiKeySavedEl.classList.remove('hidden');
+      }
+
+      function clearSavedDiscoveryApiKey() {
+        localStorage.removeItem('todoGeminiApiKey');
+        discoveryApiKeySectionEl.classList.remove('hidden');
+        discoveryApiKeySavedEl.classList.add('hidden');
+        discoveryApiKeyInputEl.value = '';
+        validateDiscoveryForm();
+      }
+
+      function validateDiscoveryForm() {
+        const hasImage = uploadedDiscoveryImageBase64 !== null;
+        const saved = localStorage.getItem('todoGeminiApiKey');
+        const hasKey = saved || (discoveryApiKeyInputEl && discoveryApiKeyInputEl.value.trim().length > 0);
+        if (generateDiscoveryBtnEl) generateDiscoveryBtnEl.disabled = !(hasImage && hasKey);
+      }
+
+      async function callGeminiImageForDiscovery(prompt, base64ImageData, apiKey, logoBase64 = null) {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+
+        const parts = [
+          { text: prompt },
+          { inlineData: { mimeType: 'image/jpeg', data: base64ImageData } },
+        ];
+        if (logoBase64) parts.push({ inlineData: { mimeType: 'image/png', data: logoBase64 } });
+
+        const payload = {
+          contents: [{ parts }],
+          generationConfig: { responseModalities: ['IMAGE'] },
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`API Error: ${response.status} ${response.statusText}. ${text}`);
+        }
+        const result = await response.json();
+        const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+        if (!base64Data) throw new Error('No image data found in API response.');
+        return `data:image/png;base64,${base64Data}`;
+      }
+
+      async function generateDiscoveryPoster() {
+        const saved = localStorage.getItem('todoGeminiApiKey');
+        const currentKey = saved || (discoveryApiKeyInputEl ? discoveryApiKeyInputEl.value.trim() : '');
+        if (!uploadedDiscoveryImageBase64 || !currentKey) return;
+
+        if (!saved && discoveryApiKeyInputEl && discoveryApiKeyInputEl.value.trim()) {
+          saveDiscoveryApiKey(discoveryApiKeyInputEl.value.trim());
+        }
+
+        // Try to include Hyper Island logo from labyrinth assets
+        let logoBase64 = null;
+        try {
+          const logoImg = new Image();
+          logoImg.crossOrigin = 'anonymous';
+          logoImg.src = '../console-labyrinth/images/hi-logo.png';
+          await new Promise((resolve, reject) => {
+            logoImg.onload = () => {
+              const c = document.createElement('canvas');
+              const ctx = c.getContext('2d');
+              c.width = logoImg.width; c.height = logoImg.height;
+              ctx.drawImage(logoImg, 0, 0);
+              logoBase64 = c.toDataURL('image/png').split(',')[1];
+              resolve();
+            };
+            logoImg.onerror = reject;
+          });
+        } catch (e) {
+          // Continue without logo
+        }
+
+        const prompt = `Create a high-quality square poster (1:1) featuring the person from the provided photo transformed into a brilliant developer/scientist/mechanic celebrating a big To-Do breakthrough. Cinematic, photorealistic style. Scene options: futuristic lab with whiteboards covered in checklists and sticky notes; a cozy dev studio with code snippets and a glowing monitor; or a workshop/garage with tools, schematics, and a clipboard of tasks. The subject stands proudly with confident posture, looking at camera. ${logoBase64 ? 'Include the HYPER ISLAND logo (from the second image) subtly integrated on a poster, laptop sticker, lab clipboard, or wall signage.' : ''} Use a tech-forward color palette (cyan/teal/blue with soft neutrals), dramatic lighting with clean contrast. The image MUST include clear, readable text: Top title: "TODO DISCOVERY" in a bold tech/lab aesthetic. Bottom ribbon: "LOGIC ARCHITECT". Ensure text is spelled exactly and highly legible over the background. Keep composition balanced and optimized for a square poster.`;
+
+        generateDiscoveryBtnTextEl.classList.add('hidden');
+        generateDiscoveryBtnLoadingEl.classList.remove('hidden');
+        generateDiscoveryBtnEl.disabled = true;
+        try {
+          const url = await callGeminiImageForDiscovery(prompt, uploadedDiscoveryImageBase64, currentKey, logoBase64);
+          generatedDiscoveryImageEl.src = url;
+          generatedDiscoveryContainerEl.classList.remove('hidden');
+          toggleDiscoveryModal(false);
+        } catch (err) {
+          alert(`Failed to generate discovery poster: ${err.message}`);
+        } finally {
+          generateDiscoveryBtnTextEl.classList.remove('hidden');
+          generateDiscoveryBtnLoadingEl.classList.add('hidden');
+          validateDiscoveryForm();
+        }
+      }
+
+      function downloadDiscoveryImage() {
+        if (!generatedDiscoveryImageEl || !generatedDiscoveryImageEl.src) return;
+        const link = document.createElement('a');
+        link.download = 'todo-discovery-poster.png';
+        link.href = generatedDiscoveryImageEl.src;
+        link.click();
+      }
+    </script>
+  </body>
+</html>
