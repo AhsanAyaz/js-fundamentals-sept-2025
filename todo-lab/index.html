@@ -743,6 +743,9 @@ function render(data) {
       let generatedDiscoveryContainerEl;
       let generatedDiscoveryImageEl;
       let downloadDiscoveryBtnEl;
+      let modalGeneratedDiscoveryContainerEl;
+      let modalGeneratedDiscoveryImageEl;
+      let modalDownloadDiscoveryBtnEl;
       let uploadedDiscoveryImageBase64 = null;
 
       function initDiscoveryElements() {
@@ -780,6 +783,18 @@ function render(data) {
                     <span id="generate-discovery-btn-loading" class="hidden animate-pulse">Generating…</span>
                   </button>
                 </div>
+                <div id="modal-generated-discovery-container" class="hidden">
+                  <h4 class="text-lg font-semibold mb-3 text-cyan-300">Your Generated Poster</h4>
+                  <img id="modal-generated-discovery-image" class="w-full rounded-lg shadow-lg border border-slate-700 mb-4" alt="Generated discovery poster" />
+                  <div class="flex gap-2">
+                    <button id="modal-download-discovery-btn" class="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded">
+                      Download Poster
+                    </button>
+                    <button onclick="toggleDiscoveryModal(false)" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded">
+                      Close & Show on Main Page
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           `;
@@ -800,6 +815,9 @@ function render(data) {
         generatedDiscoveryContainerEl = document.getElementById('generated-discovery-container');
         generatedDiscoveryImageEl = document.getElementById('generated-discovery-image');
         downloadDiscoveryBtnEl = document.getElementById('download-discovery-btn');
+        modalGeneratedDiscoveryContainerEl = document.getElementById('modal-generated-discovery-container');
+        modalGeneratedDiscoveryImageEl = document.getElementById('modal-generated-discovery-image');
+        modalDownloadDiscoveryBtnEl = document.getElementById('modal-download-discovery-btn');
 
         // Events
         closeDiscoveryModalEl.addEventListener('click', () => toggleDiscoveryModal(false));
@@ -824,6 +842,9 @@ function render(data) {
         discoveryApiKeyInputEl.addEventListener('input', validateDiscoveryForm);
         generateDiscoveryBtnEl.addEventListener('click', generateDiscoveryPoster);
         downloadDiscoveryBtnEl.addEventListener('click', downloadDiscoveryImage);
+        if (modalDownloadDiscoveryBtnEl) {
+          modalDownloadDiscoveryBtnEl.addEventListener('click', downloadModalDiscoveryImage);
+        }
         if (clearDiscoveryApiKeyEl) {
           clearDiscoveryApiKeyEl.addEventListener('click', clearSavedDiscoveryApiKey);
         }
@@ -840,19 +861,28 @@ function render(data) {
         } else {
           discoveryModalEl.classList.add('hidden');
           discoveryModalEl.classList.remove('flex');
-          resetDiscoveryForm();
+          // Copy generated image to main page if it exists
+          if (modalGeneratedDiscoveryImageEl && modalGeneratedDiscoveryImageEl.src) {
+            generatedDiscoveryImageEl.src = modalGeneratedDiscoveryImageEl.src;
+            generatedDiscoveryContainerEl.classList.remove('hidden');
+          }
+          resetDiscoveryForm(true); // Preserve generated content
         }
       }
 
-      function resetDiscoveryForm() {
+      function resetDiscoveryForm(preserveGenerated = false) {
         uploadedDiscoveryImageBase64 = null;
         if (discoveryImageUploadEl) discoveryImageUploadEl.value = '';
         if (!localStorage.getItem('todoGeminiApiKey')) {
           if (discoveryApiKeyInputEl) discoveryApiKeyInputEl.value = '';
         }
         if (generateDiscoveryBtnEl) generateDiscoveryBtnEl.disabled = true;
-        if (generatedDiscoveryContainerEl) generatedDiscoveryContainerEl.classList.add('hidden');
-        if (generatedDiscoveryImageEl) generatedDiscoveryImageEl.src = '';
+        if (!preserveGenerated) {
+          if (generatedDiscoveryContainerEl) generatedDiscoveryContainerEl.classList.add('hidden');
+          if (generatedDiscoveryImageEl) generatedDiscoveryImageEl.src = '';
+          if (modalGeneratedDiscoveryContainerEl) modalGeneratedDiscoveryContainerEl.classList.add('hidden');
+          if (modalGeneratedDiscoveryImageEl) modalGeneratedDiscoveryImageEl.src = '';
+        }
         if (generateDiscoveryBtnTextEl) generateDiscoveryBtnTextEl.classList.remove('hidden');
         if (generateDiscoveryBtnLoadingEl) generateDiscoveryBtnLoadingEl.classList.add('hidden');
       }
@@ -954,9 +984,8 @@ function render(data) {
         generateDiscoveryBtnEl.disabled = true;
         try {
           const url = await callGeminiImageForDiscovery(prompt, uploadedDiscoveryImageBase64, currentKey, logoBase64);
-          generatedDiscoveryImageEl.src = url;
-          generatedDiscoveryContainerEl.classList.remove('hidden');
-          toggleDiscoveryModal(false);
+          modalGeneratedDiscoveryImageEl.src = url;
+          modalGeneratedDiscoveryContainerEl.classList.remove('hidden');
         } catch (err) {
           alert(`Failed to generate discovery poster: ${err.message}`);
         } finally {
@@ -971,6 +1000,14 @@ function render(data) {
         const link = document.createElement('a');
         link.download = 'todo-discovery-poster.png';
         link.href = generatedDiscoveryImageEl.src;
+        link.click();
+      }
+
+      function downloadModalDiscoveryImage() {
+        if (!modalGeneratedDiscoveryImageEl || !modalGeneratedDiscoveryImageEl.src) return;
+        const link = document.createElement('a');
+        link.download = 'todo-discovery-poster.png';
+        link.href = modalGeneratedDiscoveryImageEl.src;
         link.click();
       }
     </script>
